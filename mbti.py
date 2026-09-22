@@ -16,7 +16,7 @@ st.markdown("""
 <style>
 .main-title { font-size: 48px; font-weight: 800; margin-bottom: 0; }
 .subtitle { color: #111111; font-size: 18px; margin-top: 4px; margin-bottom: 28px; }
-.result-box { padding: 28px; border-radius: 24px; background: #f7f7f8; text-align: center; margin-top: 20px;}
+.result-box { padding: 28px; border-radius: 24px; background: #f7f7f8; color: #111111; text-align: center; margin-top: 20px;}
 </style>
 """, unsafe_allow_html=True)
 
