@@ -86,8 +86,9 @@ def generate_insights_via_ai(mbti, element):
         base_url="https://api.groq.com/openai/v1"
     )
     
+    # 此处已修正模型名称为 Groq 目前可用的标准免费模型
     response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
+        model="llama-3.1-8b-instant",
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"}
     )
