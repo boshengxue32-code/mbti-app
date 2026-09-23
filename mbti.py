@@ -164,118 +164,307 @@ STAGE1_QUESTIONS = [
 
 
 def build_stage2_questions():
-  dims = ["EI", "SN", "TF", "JP"]
-  questions = []
-  texts = [
-      (
-          "In social events, you naturally tend to",
-          "Initiate conversations with new people",
-          "Wait for others to approach you",
-      ),
-      (
-          "When processing complex information, you focus on",
-          "Specific facts and present reality",
-          "Underlying patterns and future possibilities",
-      ),
-      (
-          "During disagreements, you prioritize",
-          "Truth, principles, and logical consistency",
-          "Harmony, empathy, and mutual understanding",
-      ),
-      (
-          "When working toward long-term goals, you like to",
-          "Set clear benchmarks and follow a structured plan",
-          "Adapt as you go and explore flexible pathways",
-      ),
-      (
-          "Your mental energy is primarily derived from",
-          "Interacting with the external world",
-          "Reflecting quietly in your inner world",
-      ),
-      (
-          "When describing an event, you prefer to",
-          "Stick to chronological details and facts",
-          "Use metaphors and convey the overall impression",
-      ),
-      (
-          "When evaluating a proposed idea, you look at",
-          "Efficiency, feasibility, and objective logic",
-          "Its human impact and team morale",
-      ),
-      (
-          "As deadlines approach, you tend to",
-          "Finish early to avoid stress",
-          "Feel inspired and work best under pressure",
-      ),
-      (
-          "When expressing an opinion, you tend to",
-          "Speak candidly and directly",
-          "Choose your words carefully to protect feelings",
-      ),
-      (
-          "When encountering something new, your first reaction is",
-          "How can this be practically used?",
-          "What potential options does this open up?",
-      ),
+  raw_questions = [
+      # E vs I (10 Questions)
+      {
+          "q": "In social events, you naturally tend to:",
+          "a": "Initiate conversations with new people (E)",
+          "b": "Wait for others to approach you (I)",
+          "dim": "EI",
+      },
+      {
+          "q": "Your mental energy is primarily derived from:",
+          "a": "Interacting with the external world (E)",
+          "b": "Reflecting quietly in your inner world (I)",
+          "dim": "EI",
+      },
+      {
+          "q": "When processing thoughts, you usually:",
+          "a": "Speak as you think and discuss with others (E)",
+          "b": "Formulate ideas fully before speaking (I)",
+          "dim": "EI",
+      },
+      {
+          "q": "In group settings, you typically feel:",
+          "a": "Engaged, motivated, and highly interactive (E)",
+          "b": "Observant, cautious, and selective (I)",
+          "dim": "EI",
+      },
+      {
+          "q": "After a long and busy week, your ideal recovery is:",
+          "a": "Hanging out with a lively group of friends (E)",
+          "b": "Staying home alone with a cozy activity (I)",
+          "dim": "EI",
+      },
+      {
+          "q": "When starting a new project, you prefer to:",
+          "a": "Brainstorm out loud with a team (E)",
+          "b": "Research and outline on your own first (I)",
+          "dim": "EI",
+      },
+      {
+          "q": "How do you feel about being the center of attention?",
+          "a": "Comfortable and energized by it (E)",
+          "b": "Uncomfortable or preferred to be avoided (I)",
+          "dim": "EI",
+      },
+      {
+          "q": "Your communication style is generally:",
+          "a": "Expressive, fast-paced, and broad (E)",
+          "b": "Reserved, deep, and focused (I)",
+          "dim": "EI",
+      },
+      {
+          "q": "When facing a crisis, you first tend to:",
+          "a": "Reach out to others for immediate action (E)",
+          "b": "Pause silently to assess the situation (I)",
+          "dim": "EI",
+      },
+      {
+          "q": "When meeting distant acquaintances, you usually:",
+          "a": "Eagerly make small talk to keep things active (E)",
+          "b": "Nod politely and stick to necessary exchanges (I)",
+          "dim": "EI",
+      },
+      # S vs N (10 Questions)
+      {
+          "q": "When processing complex information, you focus on:",
+          "a": "Specific facts, data, and present reality (S)",
+          "b": "Underlying patterns and future possibilities (N)",
+          "dim": "SN",
+      },
+      {
+          "q": "When describing an event, you prefer to:",
+          "a": "Stick to chronological details and facts (S)",
+          "b": "Use metaphors and convey the overall impression (N)",
+          "dim": "SN",
+      },
+      {
+          "q": "When encountering something new, your first reaction is:",
+          "a": "How can this be practically used? (S)",
+          "b": "What potential options does this open up? (N)",
+          "dim": "SN",
+      },
+      {
+          "q": "You trust information more when it comes from:",
+          "a": "Direct sensory experience and proven history (S)",
+          "b": "Intuitive hunches and logical theories (N)",
+          "dim": "SN",
+      },
+      {
+          "q": "You are naturally more attracted to:",
+          "a": "Concrete facts and hands-on execution (S)",
+          "b": "Abstract theories and imaginative concepts (N)",
+          "dim": "SN",
+      },
+      {
+          "q": "When reading a book or watching a movie, you prefer:",
+          "a": "Clear storylines with realistic scenarios (S)",
+          "b": "Symbolic plots with room for interpretation (N)",
+          "dim": "SN",
+      },
+      {
+          "q": "People often describe you as:",
+          "a": "Grounded, sensible, and realistic (S)",
+          "b": "Creative, visionary, and unconventional (N)",
+          "dim": "SN",
+      },
+      {
+          "q": "When solving a problem, you prefer to use:",
+          "a": "Standard operating procedures that work (S)",
+          "b": "Novel and innovative strategies (N)",
+          "dim": "SN",
+      },
+      {
+          "q": "When learning a new subject, you like to start with:",
+          "a": "Step-by-step examples and concrete facts (S)",
+          "b": "Big-picture concepts and overall architecture (N)",
+          "dim": "SN",
+      },
+      {
+          "q": "In daily conversations, you tend to talk more about:",
+          "a": "What actually happened and practical matters (S)",
+          "b": "Ideas, meanings, and future visions (N)",
+          "dim": "SN",
+      },
+      # T vs F (10 Questions)
+      {
+          "q": "During disagreements, you prioritize:",
+          "a": "Truth, principles, and logical consistency (T)",
+          "b": "Harmony, empathy, and mutual understanding (F)",
+          "dim": "TF",
+      },
+      {
+          "q": "When evaluating a proposed idea, you look at:",
+          "a": "Efficiency, feasibility, and objective logic (T)",
+          "b": "Its human impact and team morale (F)",
+          "dim": "TF",
+      },
+      {
+          "q": "When expressing an opinion, you tend to:",
+          "a": "Speak candidly, directly, and objectively (T)",
+          "b": "Choose words carefully to protect feelings (F)",
+          "dim": "TF",
+      },
+      {
+          "q": "When critique is necessary, you aim to be:",
+          "a": "Truthful and constructive, even if harsh (T)",
+          "b": "Encouraging and gentle, preserving relationships (F)",
+          "dim": "TF",
+      },
+      {
+          "q": "When making difficult team decisions, you rely on:",
+          "a": "Impartial rules and metrics (T)",
+          "b": "Individual circumstances and personal needs (F)",
+          "dim": "TF",
+      },
+      {
+          "q": "What bothers you more in a debate?",
+          "a": "Illogical arguments and fallacies (T)",
+          "b": "Insensitive remarks and harsh tones (F)",
+          "dim": "TF",
+      },
+      {
+          "q": "When a colleague struggles, your instinct is to:",
+          "a": "Troubleshoot their practical problem (T)",
+          "b": "Offer emotional comfort and validation (F)",
+          "dim": "TF",
+      },
+      {
+          "q": "You feel most accomplished when you achieve:",
+          "a": "A high-quality, objective result (T)",
+          "b": "Deep personal connection or appreciation (F)",
+          "dim": "TF",
+      },
+      {
+          "q": "In a leadership role, you focus primarily on:",
+          "a": "Task optimization and performance metrics (T)",
+          "b": "Team cohesion and individual growth (F)",
+          "dim": "TF",
+      },
+      {
+          "q": "When judging an action, you value more:",
+          "a": "Fairness and consistency (T)",
+          "b": "Compassion and mercy (F)",
+          "dim": "TF",
+      },
+      # J vs P (10 Questions)
+      {
+          "q": "When working toward long-term goals, you like to:",
+          "a": "Set clear benchmarks and follow a structured plan (J)",
+          "b": "Adapt as you go and explore flexible pathways (P)",
+          "dim": "JP",
+      },
+      {
+          "q": "As deadlines approach, you tend to:",
+          "a": "Finish early to avoid stress (J)",
+          "b": "Feel inspired and work best under pressure (P)",
+          "dim": "JP",
+      },
+      {
+          "q": "Your work and living space is usually:",
+          "a": "Structured, organized, and tidy (J)",
+          "b": "Spontaneous, adaptable, and flexible (P)",
+          "dim": "JP",
+      },
+      {
+          "q": "How do you feel about sudden plan changes?",
+          "a": "Disrupted and frustrated (J)",
+          "b": "Excited and adaptable (P)",
+          "dim": "JP",
+      },
+      {
+          "q": "When starting your workday, you prefer to:",
+          "a": "Follow a predetermined to-do list (J)",
+          "b": "Address whatever feels most pressing or interesting (P)",
+          "dim": "JP",
+      },
+      {
+          "q": "Decisions and choices give you a sense of:",
+          "a": "Relief and closure once settled (J)",
+          "b": "Constraint; you like keeping options open (P)",
+          "dim": "JP",
+      },
+      {
+          "q": "When packing for a trip, you usually:",
+          "a": "Categorize items days in advance (J)",
+          "b": "Throw things in the bag right before leaving (P)",
+          "dim": "JP",
+      },
+      {
+          "q": "In your daily life, you prefer to have:",
+          "a": "Clear routines and predictable schedules (J)",
+          "b": "Freedom to act spontaneously without fixed schedules (P)",
+          "dim": "JP",
+      },
+      {
+          "q": "When given a long-term project, you prefer to:",
+          "a": "Divide it into micro-tasks and complete them steadily (J)",
+          "b": "Explore broad ideas first and do bursts of intense work (P)",
+          "dim": "JP",
+      },
+      {
+          "q": "You feel most comfortable when things are:",
+          "a": "Settled, organized, and decided (J)",
+          "b": "Open-ended, flexible, and subject to change (P)",
+          "dim": "JP",
+      },
   ]
-  idx = 1
-  for t in texts:
-    for dim in dims:
-      questions.append({
-          "q": f"Q{idx}. {t[0]}:",
-          "a": f"{t[1]} ({dim[0]})",
-          "b": f"{t[2]} ({dim[1]})",
-          "dim": dim,
-      })
-      idx += 1
+
+  questions = []
+  for idx, item in enumerate(raw_questions, start=1):
+    questions.append({
+        "q": f"Q{idx}. {item['q']}",
+        "a": item["a"],
+        "b": item["b"],
+        "dim": item["dim"],
+    })
   return questions
 
 
 STAGE2_QUESTIONS = build_stage2_questions()
-
-
 # ==========================================
 # 3. Helper Functions
 # ==========================================
 def calculate_mbti(answers, questions):
-  scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
-  for idx, ans in answers.items():
-    if ans is None:
-      continue
-    q_info = questions[idx]
-    dim = q_info["dim"]
-    if ans == "A":
-      scores[dim[0]] += 1
-    elif ans == "B":
-      scores[dim[1]] += 1
+    scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
+    for idx, ans in answers.items():
+        if ans is None:
+            continue
+        q_info = questions[idx]
+        dim = q_info["dim"]
+        if ans == "A":
+            scores[dim[0]] += 1
+        elif ans == "B":
+            scores[dim[1]] += 1
 
-  mbti = ""
-  mbti += "E" if scores["E"] >= scores["I"] else "I"
-  mbti += "S" if scores["S"] >= scores["N"] else "N"
-  mbti += "T" if scores["T"] >= scores["F"] else "F"
-  mbti += "J" if scores["J"] >= scores["P"] else "P"
-  return mbti
+    mbti = ""
+    mbti += "E" if scores["E"] >= scores["I"] else "I"
+    mbti += "S" if scores["S"] >= scores["N"] else "N"
+    mbti += "T" if scores["T"] >= scores["F"] else "F"
+    mbti += "J" if scores["J"] >= scores["P"] else "P"
+    return mbti
 
 
 def get_eastern_element(year):
-  last_digit = year % 10
-  element_map = {
-      0: "Metal 🪙",
-      1: "Metal 🪙",
-      2: "Water 💧",
-      3: "Water 💧",
-      4: "Wood 🌿",
-      5: "Wood 🌿",
-      6: "Fire 💥",
-      7: "Fire 💥",
-      8: "Earth 🪐",
-      9: "Earth 🪐",
-  }
-  return element_map.get(last_digit, "Cosmic Energy ✨")
+    last_digit = year % 10
+    element_map = {
+        0: "Metal 🪙",
+        1: "Metal 🪙",
+        2: "Water 💧",
+        3: "Water 💧",
+        4: "Wood 🌿",
+        5: "Wood 🌿",
+        6: "Fire 💥",
+        7: "Fire 💥",
+        8: "Earth 🪐",
+        9: "Earth 🪐",
+    }
+    return element_map.get(last_digit, "Cosmic Energy ✨")
 
 
 def generate_ai_card(mbti, element):
-  prompt = f"""
+    prompt = f"""
     You are a modern intuitive counselor combining Western MBTI psychology with Eastern Five-Element Archetypes.
     User's Profile:
     - Confirmed MBTI: {mbti}
@@ -293,30 +482,32 @@ def generate_ai_card(mbti, element):
         "power_quote": "A 1-line catchy quote for Instagram story."
     }}
     """
-  api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
-  if not api_key:
-    raise ValueError("GROQ_API_KEY not found in Streamlit Secrets.")
+    api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY not found in Streamlit Secrets.")
 
-  client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
-  response = client.chat.completions.create(
-      model="llama-3.3-70b-versatile",
-      messages=[{"role": "user", "content": prompt}],
-      response_format={"type": "json_object"},
-  )
-  return json.loads(response.choices[0].message.content)
+    client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        response_format={"type": "json_object"},
+    )
+    return json.loads(response.choices[0].message.content)
+
+
 # ==========================================
 # 4. Main App Logic & Multi-Stage State
 # ==========================================
 if "step" not in st.session_state:
-  st.session_state.step = 1
+    st.session_state.step = 1
 if "stage1_answers" not in st.session_state:
-  st.session_state.stage1_answers = {}
+    st.session_state.stage1_answers = {}
 if "stage2_answers" not in st.session_state:
-  st.session_state.stage2_answers = {}
+    st.session_state.stage2_answers = {}
 if "prelim_mbti" not in st.session_state:
-  st.session_state.prelim_mbti = ""
+    st.session_state.prelim_mbti = ""
 if "final_mbti" not in st.session_state:
-  st.session_state.final_mbti = ""
+    st.session_state.final_mbti = ""
 
 st.title("✨ COSMIC MBTI & VIBE SYNC")
 
@@ -324,113 +515,113 @@ st.title("✨ COSMIC MBTI & VIBE SYNC")
 # Stage 1: 15-Question Fast Assessment
 # ------------------------------------------
 if st.session_state.step == 1:
-  st.subheader("Stage 1: 15-Question Fast Screening")
-  st.caption(
-      "Answer according to your intuition to estimate your initial MBTI type."
-  )
-  st.progress(0.2)
+    st.subheader("Stage 1: 15-Question Fast Screening")
+    st.caption(
+        "Answer according to your intuition to estimate your initial MBTI type."
+    )
+    st.progress(0.2)
 
-  with st.form("stage1_form"):
-    for i, q_data in enumerate(STAGE1_QUESTIONS):
-      st.write(f"**{q_data['q']}**")
-      st.session_state.stage1_answers[i] = st.radio(
-          label=f"Q{i+1}",
-          options=["A", "B"],
-          index=None,
-          format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
-          key=f"s1_q_{i}",
-          label_visibility="collapsed",
-      )
-      st.write("")
+    with st.form("stage1_form"):
+        for i, q_data in enumerate(STAGE1_QUESTIONS):
+            st.write(f"**{q_data['q']}**")
+            st.session_state.stage1_answers[i] = st.radio(
+                label=f"Q{i+1}",
+                options=["A", "B"],
+                index=None,
+                format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
+                key=f"s1_q_{i}",
+                label_visibility="collapsed",
+            )
+            st.write("")
 
-    submit_s1 = st.form_submit_button("Submit Fast Assessment 🚀")
-    if submit_s1:
-      if None in st.session_state.stage1_answers.values() or len(
-          st.session_state.stage1_answers
-      ) < len(STAGE1_QUESTIONS):
-        st.warning("Please answer all questions before submitting!")
-      else:
-        st.session_state.prelim_mbti = calculate_mbti(
-            st.session_state.stage1_answers, STAGE1_QUESTIONS
-        )
-        st.session_state.step = 2
-        st.rerun()
+        submit_s1 = st.form_submit_button("Submit Fast Assessment 🚀")
+        if submit_s1:
+            if None in st.session_state.stage1_answers.values() or len(
+                st.session_state.stage1_answers
+            ) < len(STAGE1_QUESTIONS):
+                st.warning("Please answer all questions before submitting!")
+            else:
+                st.session_state.prelim_mbti = calculate_mbti(
+                    st.session_state.stage1_answers, STAGE1_QUESTIONS
+                )
+                st.session_state.step = 2
+                st.rerun()
 
 # ------------------------------------------
 # Stage 2: 40-Question Deep Assessment
 # ------------------------------------------
 elif st.session_state.step == 2:
-  st.subheader("Stage 2: 40-Question Deep Calibration")
-  st.info(
-      "Your preliminary MBTI estimation from Stage 1:"
-      f" **{st.session_state.prelim_mbti}**"
-  )
-  st.write(
-      "Please complete these 40 detailed questions to recalibrate and confirm"
-      " your final personality profile."
-  )
-  st.progress(0.6)
+    st.subheader("Stage 2: 40-Question Deep Calibration")
+    st.info(
+        "Your preliminary MBTI estimation from Stage 1:"
+        f" **{st.session_state.prelim_mbti}**"
+    )
+    st.write(
+        "Please complete these 40 detailed questions to recalibrate and confirm"
+        " your final personality profile."
+    )
+    st.progress(0.6)
 
-  with st.form("stage2_form"):
-    for i, q_data in enumerate(STAGE2_QUESTIONS):
-      st.write(f"**{q_data['q']}**")
-      st.session_state.stage2_answers[i] = st.radio(
-          label=f"S2_Q{i+1}",
-          options=["A", "B"],
-          index=None,
-          format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
-          key=f"s2_q_{i}",
-          label_visibility="collapsed",
-      )
-      st.write("")
+    with st.form("stage2_form"):
+        for i, q_data in enumerate(STAGE2_QUESTIONS):
+            st.write(f"**{q_data['q']}**")
+            st.session_state.stage2_answers[i] = st.radio(
+                label=f"S2_Q{i+1}",
+                options=["A", "B"],
+                index=None,
+                format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
+                key=f"s2_q_{i}",
+                label_visibility="collapsed",
+            )
+            st.write("")
 
-    submit_s2 = st.form_submit_button("Submit Deep Calibration 🧬")
-    if submit_s2:
-      if None in st.session_state.stage2_answers.values() or len(
-          st.session_state.stage2_answers
-      ) < len(STAGE2_QUESTIONS):
-        st.warning("Please answer all questions before submitting!")
-      else:
-        st.session_state.final_mbti = calculate_mbti(
-            st.session_state.stage2_answers, STAGE2_QUESTIONS
-        )
-        st.session_state.step = 3
-        st.rerun()
+        submit_s2 = st.form_submit_button("Submit Deep Calibration 🧬")
+        if submit_s2:
+            if None in st.session_state.stage2_answers.values() or len(
+                st.session_state.stage2_answers
+            ) < len(STAGE2_QUESTIONS):
+                st.warning("Please answer all questions before submitting!")
+            else:
+                st.session_state.final_mbti = calculate_mbti(
+                    st.session_state.stage2_answers, STAGE2_QUESTIONS
+                )
+                st.session_state.step = 3
+                st.rerun()
 
 # ------------------------------------------
 # Stage 3: Birth Year + Eastern Element Card
 # ------------------------------------------
 elif st.session_state.step == 3:
-  st.subheader("Stage 3: Energy Alignment & Blueprint Generation")
-  st.success(
-      "🎉 Calibration Complete! Your final confirmed MBTI is:"
-      f" **{st.session_state.final_mbti}**"
-  )
-  st.progress(1.0)
+    st.subheader("Stage 3: Energy Alignment & Blueprint Generation")
+    st.success(
+        "🎉 Calibration Complete! Your final confirmed MBTI is:"
+        f" **{st.session_state.final_mbti}**"
+    )
+    st.progress(1.0)
 
-  birth_year = st.number_input(
-      "Select your birth year (To calculate your Eastern Element):",
-      min_value=1950,
-      max_value=2026,
-      value=2000,
-  )
-  user_element = get_eastern_element(birth_year)
-  st.write(f"Your Eastern Archetypal Element: **{user_element}**")
+    birth_year = st.number_input(
+        "Select your birth year (To calculate your Eastern Element):",
+        min_value=1950,
+        max_value=2026,
+        value=2000,
+    )
+    user_element = get_eastern_element(birth_year)
+    st.write(f"Your Eastern Archetypal Element: **{user_element}**")
 
-  col_gen, col_reset = st.columns([3, 1])
-  with col_gen:
-    gen_btn = st.button("Generate Cosmic Energy Blueprint ✨")
-  with col_reset:
-    if st.button("Restart 🔄"):
-      st.session_state.step = 1
-      st.rerun()
+    col_gen, col_reset = st.columns([3, 1])
+    with col_gen:
+        gen_btn = st.button("Generate Cosmic Energy Blueprint ✨")
+    with col_reset:
+        if st.button("Restart 🔄"):
+            st.session_state.step = 1
+            st.rerun()
 
-  if gen_btn:
-    with st.spinner("Synthesizing MBTI and Eastern Archetypes..."):
-      try:
-        data = generate_ai_card(st.session_state.final_mbti, user_element)
+    if gen_btn:
+        with st.spinner("Synthesizing MBTI and Eastern Archetypes..."):
+            try:
+                data = generate_ai_card(st.session_state.final_mbti, user_element)
 
-        card_html = f"""
+                card_html = f"""
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -556,7 +747,7 @@ elif st.session_state.step == 3:
                 </html>
                 """
 
-        components.html(card_html, height=460, scrolling=False)
-      except Exception as e:
-        st.error(f"Failed to generate card: {str(e)}")
+                components.html(card_html, height=460, scrolling=False)
+            except Exception as e:
+                st.error(f"Failed to generate card: {str(e)}")
 
