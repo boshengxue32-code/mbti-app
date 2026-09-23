@@ -1,9 +1,9 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import os
 import json
 import io
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 # ==========================================
 # 1. Page Configuration & Dark Cyber Theme
@@ -14,7 +14,6 @@ st.set_page_config(
     layout="centered"
 )
 
-# Custom CSS for minimalist dark-mode aesthetic
 st.markdown("""
     <style>
     .main {
@@ -57,7 +56,7 @@ def get_eastern_element(year):
     return element_map.get(last_digit, "Cosmic Energy")
 
 def generate_insights_via_ai(mbti, element):
-    """Fetches modern intuitive insight using OpenAI GPT-4o-mini"""
+    """Fetches modern intuitive insight using Free Groq API"""
     prompt = f"""
     You are a modern intuitive counselor combining Western MBTI psychology with Eastern Five-Element Archetypes.
     User's Profile:
@@ -76,15 +75,19 @@ def generate_insights_via_ai(mbti, element):
     }}
     """
     
-    # Securely retrieve the API Key from Streamlit Secrets or Environment Variables
-    api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
+    api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
     
     if not api_key:
-        raise ValueError("OPENAI_API_KEY not found. Please configure it in your Streamlit Secrets.")
+        raise ValueError("GROQ_API_KEY not found. Please configure it in your Streamlit Secrets.")
 
-    client = openai.OpenAI(api_key=api_key)
+    # 使用 Groq 的免费接口
+    client = OpenAI(
+        api_key=api_key,
+        base_url="https://api.groq.com/openai/v1"
+    )
+    
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="llama-3.3-70b-versatile",
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"}
     )
@@ -96,18 +99,11 @@ def create_social_card(mbti, element, title, quote):
     img = Image.new('RGB', (600, 600), color='#121215')
     draw = ImageDraw.Draw(img)
     
-    # Outer Frame
     draw.rectangle([20, 20, 580, 580], outline='#33333E', width=2)
-    
-    # Typography
     draw.text((50, 60), "COSMIC VIBE SYNC", fill='#8A2BE2')
     draw.text((50, 120), f"TYPE: {mbti} × {element.upper()}", fill='#888888')
     draw.text((50, 180), title, fill='#FFFFFF')
-    
-    # Divider Line
     draw.line([(50, 250), (550, 250)], fill='#33333E', width=1)
-    
-    # Story Quote
     draw.text((50, 300), f'"{quote}"', fill='#E0E0E0')
     draw.text((50, 520), "→ Discover your vibe: cosmicvibe.app", fill='#666666')
     
@@ -123,7 +119,6 @@ st.caption("Synthesizing MBTI Cognitive Functions with Eastern Archetypal Energi
 
 st.markdown("---")
 
-# User Input Controls
 col1, col2 = st.columns(2)
 
 with col1:
@@ -138,7 +133,6 @@ user_element = get_eastern_element(birth_year)
 
 st.write(f"Your Eastern Core Element: **{user_element}**")
 
-# Trigger Button
 if st.button("Generate Energy Blueprint"):
     with st.spinner("Aligning cosmic frequencies & generating analysis..."):
         try:
@@ -154,7 +148,6 @@ if st.button("Generate Energy Blueprint"):
             with col_b:
                 st.error(f"**Don't:** {data['actionable_donts']}")
             
-            # Shareable Social Card Display
             st.markdown("### 📸 Your Shareable Card")
             card_img_bytes = create_social_card(
                 selected_mbti, 
@@ -174,5 +167,4 @@ if st.button("Generate Energy Blueprint"):
 
         except Exception as e:
             st.error(f"Error generating insight: {str(e)}")
-
 
