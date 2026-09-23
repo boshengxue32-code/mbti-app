@@ -2,11 +2,9 @@ import streamlit as st
 from openai import OpenAI
 import os
 import json
-import io
-from PIL import Image, ImageDraw
 
 # ==========================================
-# 1. Page Configuration & Dark Cyber Theme
+# 1. Page Configuration & Cyberpunk Styling
 # ==========================================
 st.set_page_config(
     page_title="Cosmic Vibe Sync",
@@ -16,26 +14,30 @@ st.set_page_config(
 
 st.markdown("""
     <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
+    
+    * {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+    }
     .main {
-        background-color: #0E0E10;
+        background: #090A0F;
         color: #F0F0F2;
     }
-    h1, h2, h3 {
-        font-family: 'Helvetica Neue', sans-serif;
-        font-weight: 300;
-        letter-spacing: 1.5px;
-    }
     .stButton>button {
-        background-color: #1F1F24;
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
         color: #FFFFFF;
-        border: 1px solid #33333E;
-        border-radius: 8px;
-        padding: 12px 24px;
+        border: none;
+        border-radius: 12px;
+        padding: 14px 28px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
         transition: all 0.3s ease;
+        width: 100%;
     }
     .stButton>button:hover {
-        border-color: #8A2BE2;
-        box-shadow: 0 0 10px rgba(138, 43, 226, 0.5);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 30px rgba(168, 85, 247, 0.6);
     }
     </style>
 """, unsafe_allow_html=True)
@@ -47,13 +49,13 @@ def get_eastern_element(year):
     """Maps birth year to Eastern Five Elements Archetype"""
     last_digit = year % 10
     element_map = {
-        0: "Metal", 1: "Metal",
-        2: "Water", 3: "Water",
-        4: "Wood",  5: "Wood",
-        6: "Fire",  7: "Fire",
-        8: "Earth", 9: "Earth"
+        0: "Metal 🪙", 1: "Metal 🪙",
+        2: "Water 💧", 3: "Water 💧",
+        4: "Wood 🌿",  5: "Wood 🌿",
+        6: "Fire 💥",  7: "Fire 💥",
+        8: "Earth 🪐", 9: "Earth 🪐"
     }
-    return element_map.get(last_digit, "Cosmic Energy")
+    return element_map.get(last_digit, "Cosmic Energy ✨")
 
 def generate_insights_via_ai(mbti, element):
     """Fetches modern intuitive insight using Free Groq API"""
@@ -70,7 +72,7 @@ def generate_insights_via_ai(mbti, element):
         "archetype_title": "Short cool title like 'The Intuitive Water Architect'",
         "daily_vibe": "A 2-sentence psychological insight about how their {mbti} energy interacts with {element} element today.",
         "actionable_dos": "1 specific empowering advice for today.",
-        "actionable_donts": "1 thing to avoid today (social burn-out, micro-managing, etc.).",
+        "actionable_donts": "1 thing to avoid today.",
         "power_quote": "A 1-line catchy quote for Instagram story."
     }}
     """
@@ -80,13 +82,11 @@ def generate_insights_via_ai(mbti, element):
     if not api_key:
         raise ValueError("GROQ_API_KEY not found. Please configure it in your Streamlit Secrets.")
 
-    # 使用 Groq 的免费 API 接口
     client = OpenAI(
         api_key=api_key,
         base_url="https://api.groq.com/openai/v1"
     )
     
-    # 替换为 Groq 官方推荐的新在线模型
     response = client.chat.completions.create(
         model="openai/gpt-oss-20b",
         messages=[{"role": "user", "content": prompt}],
@@ -95,25 +95,8 @@ def generate_insights_via_ai(mbti, element):
     
     return json.loads(response.choices[0].message.content)
 
-def create_social_card(mbti, element, title, quote):
-    """Generates a dynamic social share card image"""
-    img = Image.new('RGB', (600, 600), color='#121215')
-    draw = ImageDraw.Draw(img)
-    
-    draw.rectangle([20, 20, 580, 580], outline='#33333E', width=2)
-    draw.text((50, 60), "COSMIC VIBE SYNC", fill='#8A2BE2')
-    draw.text((50, 120), f"TYPE: {mbti} × {element.upper()}", fill='#888888')
-    draw.text((50, 180), title, fill='#FFFFFF')
-    draw.line([(50, 250), (550, 250)], fill='#33333E', width=1)
-    draw.text((50, 300), f'"{quote}"', fill='#E0E0E0')
-    draw.text((50, 520), "→ Discover your vibe: cosmicvibe.app", fill='#666666')
-    
-    buf = io.BytesIO()
-    img.save(buf, format='PNG')
-    return buf.getvalue()
-
 # ==========================================
-# 3. User Interface & Page Layout
+# 3. User Interface & Dynamic Card Layout
 # ==========================================
 st.title("✨ COSMIC VIBE SYNC")
 st.caption("Synthesizing MBTI Cognitive Functions with Eastern Archetypal Energies.")
@@ -131,40 +114,70 @@ with col2:
     birth_year = st.number_input("Select Birth Year", min_value=1950, max_value=2026, value=2000)
 
 user_element = get_eastern_element(birth_year)
-
 st.write(f"Your Eastern Core Element: **{user_element}**")
 
 if st.button("Generate Energy Blueprint"):
-    with st.spinner("Aligning cosmic frequencies & generating analysis..."):
+    with st.spinner("Aligning cosmic frequencies..."):
         try:
             data = generate_insights_via_ai(selected_mbti, user_element)
             
-            st.markdown("---")
-            st.subheader(f"🔮 Archetype: {data['archetype_title']}")
-            st.markdown(f"**Daily Energy Vibe:**\n{data['daily_vibe']}")
+            # 高颜值 HTML 卡片模版
+            card_html = f"""
+            <div style="
+                background: linear-gradient(135deg, #13151f 0%, #1e1b4b 50%, #311042 100%);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                border-radius: 24px;
+                padding: 32px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
+                margin: 20px 0;
+                position: relative;
+                overflow: hidden;
+            ">
+                <!-- 装饰背景圈 -->
+                <div style="position: absolute; top: -50px; right: -50px; width: 180px; height: 180px; background: rgba(168, 85, 247, 0.25); filter: blur(50px); border-radius: 50%;"></div>
+                <div style="position: absolute; bottom: -50px; left: -50px; width: 180px; height: 180px; background: rgba(236, 72, 153, 0.25); filter: blur(50px); border-radius: 50%;"></div>
+
+                <!-- 头部 Badge -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <span style="font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #a855f7; text-transform: uppercase;">Cosmic Energy Blueprint</span>
+                    <span style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; color: #e2e8f0;">
+                        {selected_mbti} × {user_element}
+                    </span>
+                </div>
+
+                <!-- 主称号 -->
+                <h2 style="font-size: 26px; font-weight: 800; background: linear-gradient(90deg, #ffffff, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 16px 0;">
+                    {data['archetype_title']}
+                </h2>
+
+                <!-- Vibe 描述 -->
+                <p style="font-size: 15px; line-height: 1.6; color: #cbd5e1; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: 12px; border-left: 3px solid #a855f7;">
+                    {data['daily_vibe']}
+                </p >
+
+                <!-- Do & Don't 网格 -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
+                    <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 12px; padding: 12px 16px;">
+                        <span style="color: #4ade80; font-size: 12px; font-weight: 700; text-transform: uppercase;">✨ DO</span>
+                        <p style="font-size: 13px; color: #f0fdf4; margin: 4px 0 0 0; font-weight: 500;">{data['actionable_dos']}</p >
+                    </div>
+                    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 12px 16px;">
+                        <span style="color: #f87171; font-size: 12px; font-weight: 700; text-transform: uppercase;">🚫 DON'T</span>
+                        <p style="font-size: 13px; color: #fef2f2; margin: 4px 0 0 0; font-weight: 500;">{data['actionable_donts']}</p >
+                    </div>
+                </div>
+
+                <!-- 金句金格 -->
+                <div style="text-align: center; padding-top: 16px; border-top: 1px dashed rgba(255, 255, 255, 0.15);">
+                    <p style="font-size: 16px; font-style: italic; font-weight: 600; color: #f472b6; margin: 0;">
+                        "{data['power_quote']}"
+                    </p >
+                </div>
+            </div>
+            """
             
-            col_a, col_b = st.columns(2)
-            with col_a:
-                st.success(f"**Do:** {data['actionable_dos']}")
-            with col_b:
-                st.error(f"**Don't:** {data['actionable_donts']}")
-            
-            st.markdown("### 📸 Your Shareable Card")
-            card_img_bytes = create_social_card(
-                selected_mbti, 
-                user_element, 
-                data['archetype_title'], 
-                data['power_quote']
-            )
-            
-            st.image(card_img_bytes, caption="Press & hold / Right-click to save for your Story")
-            
-            st.download_button(
-                label="Download Story Card",
-                data=card_img_bytes,
-                file_name=f"{selected_mbti}_cosmic_vibe.png",
-                mime="image/png"
-            )
+            # 渲染卡片
+            st.markdown(card_html, unsafe_allow_html=True)
 
         except Exception as e:
             st.error(f"Error generating insight: {str(e)}")
