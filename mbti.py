@@ -63,31 +63,31 @@ STAGE1_QUESTIONS = [
 ]
 
 def build_stage2_questions():
-dims = ["EI", "SN", "TF", "JP"]
-questions = []
-texts = [
-("In social events, you naturally tend to", "Initiate conversations with new people", "Wait for others to approach you"),
-("When processing complex information, you focus on", "Specific facts and present reality", "Underlying patterns and future possibilities"),
-("During disagreements, you prioritize", "Truth, principles, and logical consistency", "Harmony, empathy, and mutual understanding"),
-("When working toward long-term goals, you like to", "Set clear benchmarks and follow a structured plan", "Adapt as you go and explore flexible pathways"),
-("Your mental energy is primarily derived from", "Interacting with the external world", "Reflecting quietly in your inner world"),
-("When describing an event, you prefer to", "Stick to chronological details and facts", "Use metaphors and convey the overall impression"),
-("When evaluating a proposed idea, you look at", "Efficiency, feasibility, and objective logic", "Its human impact and team morale"),
-("As deadlines approach, you tend to", "Finish early to avoid stress", "Feel inspired and work best under pressure"),
-("When expressing an opinion, you tend to", "Speak candidly and directly", "Choose your words carefully to protect feelings"),
-("When encountering something new, your first reaction is", "How can this be practically used?", "What potential options does this open up?")
-]
-idx = 1
-for t in texts:
-for dim in dims:
-questions.append({
-"q": f"Q{idx}. {t[0]}:",
-"a": f"{t[1]} ({dim[0]})",
-"b": f"{t[2]} ({dim[1]})",
-"dim": dim
-})
-idx += 1
-return questions
+    dims = ["EI", "SN", "TF", "JP"]
+    questions = []
+    texts = [
+        ("In social events, you naturally tend to", "Initiate conversations with new people", "Wait for others to approach you"),
+        ("When processing complex information, you focus on", "Specific facts and present reality", "Underlying patterns and future possibilities"),
+        ("During disagreements, you prioritize", "Truth, principles, and logical consistency", "Harmony, empathy, and mutual understanding"),
+        ("When working toward long-term goals, you like to", "Set clear benchmarks and follow a structured plan", "Adapt as you go and explore flexible pathways"),
+        ("Your mental energy is primarily derived from", "Interacting with the external world", "Reflecting quietly in your inner world"),
+        ("When describing an event, you prefer to", "Stick to chronological details and facts", "Use metaphors and convey the overall impression"),
+        ("When evaluating a proposed idea, you look at", "Efficiency, feasibility, and objective logic", "Its human impact and team morale"),
+        ("As deadlines approach, you tend to", "Finish early to avoid stress", "Feel inspired and work best under pressure"),
+        ("When expressing an opinion, you tend to", "Speak candidly and directly", "Choose your words carefully to protect feelings"),
+        ("When encountering something new, your first reaction is", "How can this be practically used?", "What potential options does this open up?")
+    ]
+    idx = 1
+    for t in texts:
+        for dim in dims:
+            questions.append({
+                "q": f"Q{idx}. {t[0]}:",
+                "a": f"{t[1]} ({dim[0]})",
+                "b": f"{t[2]} ({dim[1]})",
+                "dim": dim
+            })
+            idx += 1
+    return questions
 
 STAGE2_QUESTIONS = build_stage2_questions()
 
