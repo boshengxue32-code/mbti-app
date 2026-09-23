@@ -97,11 +97,13 @@ STAGE2_QUESTIONS = build_stage2_questions()
 def calculate_mbti(answers, questions):
     scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
     for idx, ans in answers.items():
+        if ans is None:
+            continue
         q_info = questions[idx]
         dim = q_info["dim"]
         if ans == "A":
             scores[dim[0]] += 1
-        else:
+        elif ans == "B":
             scores[dim[1]] += 1
             
     mbti = ""
@@ -182,6 +184,7 @@ if st.session_state.step == 1:
             st.session_state.stage1_answers[i] = st.radio(
                 label=f"Q{i+1}",
                 options=["A", "B"],
+                index=None,
                 format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
                 key=f"s1_q_{i}",
                 label_visibility="collapsed"
@@ -190,9 +193,12 @@ if st.session_state.step == 1:
             
         submit_s1 = st.form_submit_button("Submit Fast Assessment 🚀")
         if submit_s1:
-            st.session_state.prelim_mbti = calculate_mbti(st.session_state.stage1_answers, STAGE1_QUESTIONS)
-            st.session_state.step = 2
-            st.rerun()
+            if None in st.session_state.stage1_answers.values() or len(st.session_state.stage1_answers) < len(STAGE1_QUESTIONS):
+                st.warning("Please answer all questions before submitting!")
+            else:
+                st.session_state.prelim_mbti = calculate_mbti(st.session_state.stage1_answers, STAGE1_QUESTIONS)
+                st.session_state.step = 2
+                st.rerun()
 
 # ------------------------------------------
 # Stage 2: 40-Question Deep Assessment
@@ -209,6 +215,7 @@ elif st.session_state.step == 2:
             st.session_state.stage2_answers[i] = st.radio(
                 label=f"S2_Q{i+1}",
                 options=["A", "B"],
+                index=None,
                 format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
                 key=f"s2_q_{i}",
                 label_visibility="collapsed"
@@ -217,9 +224,12 @@ elif st.session_state.step == 2:
             
         submit_s2 = st.form_submit_button("Submit Deep Calibration 🧬")
         if submit_s2:
-            st.session_state.final_mbti = calculate_mbti(st.session_state.stage2_answers, STAGE2_QUESTIONS)
-            st.session_state.step = 3
-            st.rerun()
+            if None in st.session_state.stage2_answers.values() or len(st.session_state.stage2_answers) < len(STAGE2_QUESTIONS):
+                st.warning("Please answer all questions before submitting!")
+            else:
+                st.session_state.final_mbti = calculate_mbti(st.session_state.stage2_answers, STAGE2_QUESTIONS)
+                st.session_state.step = 3
+                st.rerun()
 
 # ------------------------------------------
 # Stage 3: Birth Year + Eastern Element Card
