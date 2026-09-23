@@ -57,7 +57,7 @@ STAGE1_QUESTIONS = [
 {"q": "10. When faced with rules and guidelines:", "a": "Follow them objectively to ensure fairness and efficiency (T)", "b": "Consider exceptions based on human elements and circumstances (F)", "dim": "TF"},
 {"q": "11. Before going on a vacation, you usually:", "a": "Create a detailed itinerary and packing list (J)", "b": "Pack last minute and explore spontaneously (P)", "dim": "JP"},
 {"q": "12. You trust information more when it comes from:", "a": "Direct experience and verified data (S)", "b": "Intuitive insights and future trends (N)", "dim": "SN"},
-{"q": "13. Spending time completely alone feels like:", "a": "Okay for a short while, but boring after time (E)", "b": "A essential way to recharge your mental energy (I)", "dim": "EI"},
+{"q": "13. Spending time completely alone feels like:", "a": "Okay for a short while, but boring after time (E)", "b": "An essential way to recharge your mental energy (I)", "dim": "EI"},
 {"q": "14. When evaluating someone's performance, you value:", "a": "Fairness, objectivity, and competence (T)", "b": "Kindness, empathy, and personal effort (F)", "dim": "TF"},
 {"q": "15. When dealing with an unexpected challenge, you prefer to:", "a": "Rely on proven methods and past experience (S)", "b": "Brainstorm novel and unconventional approaches (N)", "dim": "SN"}
 ]
