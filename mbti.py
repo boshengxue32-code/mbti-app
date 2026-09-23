@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 from openai import OpenAI
 import os
 import json
@@ -14,11 +15,6 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap');
-    
-    * {
-        font-family: 'Plus Jakarta Sans', sans-serif;
-    }
     .main {
         background: #090A0F;
         color: #F0F0F2;
@@ -121,63 +117,131 @@ if st.button("Generate Energy Blueprint"):
         try:
             data = generate_insights_via_ai(selected_mbti, user_element)
             
-            # 高颜值 HTML 卡片模版
+            # 使用精准无报错的高颜值卡片模板
             card_html = f"""
-            <div style="
-                background: linear-gradient(135deg, #13151f 0%, #1e1b4b 50%, #311042 100%);
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 24px;
-                padding: 32px;
-                box-shadow: 0 20px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
-                margin: 20px 0;
-                position: relative;
-                overflow: hidden;
-            ">
-                <!-- 装饰背景圈 -->
-                <div style="position: absolute; top: -50px; right: -50px; width: 180px; height: 180px; background: rgba(168, 85, 247, 0.25); filter: blur(50px); border-radius: 50%;"></div>
-                <div style="position: absolute; bottom: -50px; left: -50px; width: 180px; height: 180px; background: rgba(236, 72, 153, 0.25); filter: blur(50px); border-radius: 50%;"></div>
-
-                <!-- 头部 Badge -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <span style="font-size: 12px; font-weight: 800; letter-spacing: 2px; color: #a855f7; text-transform: uppercase;">Cosmic Energy Blueprint</span>
-                    <span style="background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); padding: 4px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; color: #e2e8f0;">
-                        {selected_mbti} × {user_element}
-                    </span>
-                </div>
-
-                <!-- 主称号 -->
-                <h2 style="font-size: 26px; font-weight: 800; background: linear-gradient(90deg, #ffffff, #c084fc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin: 0 0 16px 0;">
-                    {data['archetype_title']}
-                </h2>
-
-                <!-- Vibe 描述 -->
-                <p style="font-size: 15px; line-height: 1.6; color: #cbd5e1; margin-bottom: 24px; background: rgba(0, 0, 0, 0.2); padding: 16px; border-radius: 12px; border-left: 3px solid #a855f7;">
-                    {data['daily_vibe']}
-                </p >
-
-                <!-- Do & Don't 网格 -->
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px;">
-                    <div style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.2); border-radius: 12px; padding: 12px 16px;">
-                        <span style="color: #4ade80; font-size: 12px; font-weight: 700; text-transform: uppercase;">✨ DO</span>
-                        <p style="font-size: 13px; color: #f0fdf4; margin: 4px 0 0 0; font-weight: 500;">{data['actionable_dos']}</p >
+            <!DOCTYPE html>
+            <html>
+            <head>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+                body {{
+                    margin: 0;
+                    padding: 10px;
+                    background: transparent;
+                    font-family: 'Plus Jakarta Sans', sans-serif;
+                }}
+                .card {{
+                    background: linear-gradient(135deg, #13151f 0%, #1e1b4b 50%, #311042 100%);
+                    border: 1px solid rgba(255, 255, 255, 0.15);
+                    border-radius: 20px;
+                    padding: 24px;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                    color: #FFFFFF;
+                }}
+                .header {{
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-bottom: 16px;
+                }}
+                .tag {{
+                    font-size: 11px;
+                    font-weight: 800;
+                    letter-spacing: 1.5px;
+                    color: #a855f7;
+                    text-transform: uppercase;
+                }}
+                .badge {{
+                    background: rgba(255, 255, 255, 0.1);
+                    border: 1px solid rgba(255, 255, 255, 0.2);
+                    padding: 4px 10px;
+                    border-radius: 12px;
+                    font-size: 12px;
+                    font-weight: 600;
+                    color: #e2e8f0;
+                }}
+                .title {{
+                    font-size: 22px;
+                    font-weight: 800;
+                    background: linear-gradient(90deg, #ffffff, #c084fc);
+                    -webkit-background-clip: text;
+                    -webkit-text-fill-color: transparent;
+                    margin: 0 0 14px 0;
+                }}
+                .vibe {{
+                    font-size: 14px;
+                    line-height: 1.5;
+                    color: #cbd5e1;
+                    background: rgba(0, 0, 0, 0.25);
+                    padding: 14px;
+                    border-radius: 10px;
+                    border-left: 3px solid #a855f7;
+                    margin-bottom: 16px;
+                }}
+                .grid {{
+                    display: grid;
+                    grid-template-columns: 1fr 1fr;
+                    gap: 10px;
+                    margin-bottom: 16px;
+                }}
+                .box {{
+                    padding: 10px 12px;
+                    border-radius: 10px;
+                    font-size: 12px;
+                }}
+                .do-box {{
+                    background: rgba(34, 197, 94, 0.12);
+                    border: 1px solid rgba(34, 197, 94, 0.25);
+                    color: #4ade80;
+                }}
+                .dont-box {{
+                    background: rgba(239, 68, 68, 0.12);
+                    border: 1px solid rgba(239, 68, 68, 0.25);
+                    color: #f87171;
+                }}
+                .box-title {{
+                    font-weight: 800;
+                    margin-bottom: 2px;
+                    display: block;
+                }}
+                .quote {{
+                    text-align: center;
+                    font-size: 14px;
+                    font-style: italic;
+                    font-weight: 600;
+                    color: #f472b6;
+                    border-top: 1px dashed rgba(255,255,255,0.15);
+                    padding-top: 14px;
+                    margin: 0;
+                }}
+            </style>
+            </head>
+            <body>
+                <div class="card">
+                    <div class="header">
+                        <span class="tag">Cosmic Energy Blueprint</span>
+                        <span class="badge">{selected_mbti} × {user_element}</span>
                     </div>
-                    <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 12px; padding: 12px 16px;">
-                        <span style="color: #f87171; font-size: 12px; font-weight: 700; text-transform: uppercase;">🚫 DON'T</span>
-                        <p style="font-size: 13px; color: #fef2f2; margin: 4px 0 0 0; font-weight: 500;">{data['actionable_donts']}</p >
+                    <div class="title">{data['archetype_title']}</div>
+                    <div class="vibe">{data['daily_vibe']}</div>
+                    <div class="grid">
+                        <div class="box do-box">
+                            <span class="box-title">✨ DO</span>
+                            <span style="color: #f0fdf4;">{data['actionable_dos']}</span>
+                        </div>
+                        <div class="box dont-box">
+                            <span class="box-title">🚫 DON'T</span>
+                            <span style="color: #fef2f2;">{data['actionable_donts']}</span>
+                        </div>
                     </div>
+                    <div class="quote">"{data['power_quote']}"</div>
                 </div>
-
-                <!-- 金句金格 -->
-                <div style="text-align: center; padding-top: 16px; border-top: 1px dashed rgba(255, 255, 255, 0.15);">
-                    <p style="font-size: 16px; font-style: italic; font-weight: 600; color: #f472b6; margin: 0;">
-                        "{data['power_quote']}"
-                    </p >
-                </div>
-            </div>
+            </body>
+            </html>
             """
             
-            # 渲染卡片
-            st.markdown(card_html, unsafe_allow_html=True)
+            # 使用专属 HTML 渲染组件
+            components.html(card_html, height=380)
 
         except Exception as e:
             st.error(f"Error generating insight: {str(e)}")
