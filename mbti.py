@@ -165,7 +165,6 @@ STAGE1_QUESTIONS = [
 
 def build_stage2_questions():
   raw_questions = [
-      # E vs I (10 Questions)
       {
           "q": "In social events, you naturally tend to:",
           "a": "Initiate conversations with new people (E)",
@@ -226,7 +225,6 @@ def build_stage2_questions():
           "b": "Nod politely and stick to necessary exchanges (I)",
           "dim": "EI",
       },
-      # S vs N (10 Questions)
       {
           "q": "When processing complex information, you focus on:",
           "a": "Specific facts, data, and present reality (S)",
@@ -287,7 +285,6 @@ def build_stage2_questions():
           "b": "Ideas, meanings, and future visions (N)",
           "dim": "SN",
       },
-      # T vs F (10 Questions)
       {
           "q": "During disagreements, you prioritize:",
           "a": "Truth, principles, and logical consistency (T)",
@@ -348,7 +345,6 @@ def build_stage2_questions():
           "b": "Compassion and mercy (F)",
           "dim": "TF",
       },
-      # J vs P (10 Questions)
       {
           "q": "When working toward long-term goals, you like to:",
           "a": "Set clear benchmarks and follow a structured plan (J)",
@@ -423,7 +419,7 @@ def build_stage2_questions():
 
 
 STAGE2_QUESTIONS = build_stage2_questions()
- # ==========================================
+# ==========================================
 # 3. Helper Functions
 # ==========================================
 def calculate_mbti(answers, questions):
@@ -488,9 +484,9 @@ def generate_ai_card(mbti, element):
 
   client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
-  # 修正模型名称为 Groq 当前稳定模型 llama-3.1-70b-versatile
+  # 替换为 Groq 长久稳定支持的模型名称：llama3-70b-8192
   response = client.chat.completions.create(
-      model="llama-3.1-70b-versatile",
+      model="llama3-70b-8192",
       messages=[{"role": "user", "content": prompt}],
       response_format={"type": "json_object"},
   )
