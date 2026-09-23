@@ -1,621 +1,353 @@
 import json
 import os
-from openai import OpenAI
 import streamlit as st
 import streamlit.components.v1 as components
+from openai import OpenAI
 
-# ==========================================
-# 1. Page Configuration & Adaptive Styling
-# ==========================================
+# Set Page Config
 st.set_page_config(
-    page_title="Cosmic MBTI Sync & Alignment",
-    page_icon="✨",
-    layout="centered",
-)
-
-st.markdown(
-    """
-    <style>
-    /* 适配深色/浅色模式文字颜色 */
-    .stRadio p, .stRadio div, div[role="radiogroup"] label p, div[role="radiogroup"] span {
-        color: #1f2937 !important;
-        font-weight: 600 !important;
-        font-size: 15px !important;
-        opacity: 1 !important;
-    }
-
-    @media (prefers-color-scheme: dark) {
-        .stRadio p, .stRadio div, div[role="radiogroup"] label p, div[role="radiogroup"] span {
-            color: #FFFFFF !important;
-        }
-    }
-
-    [data-theme="dark"] .stRadio p, 
-    [data-theme="dark"] div[role="radiogroup"] label p {
-        color: #FFFFFF !important;
-    }
-
-    /* 渐变按钮样式 */
-    .stButton>button {
-        background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-        color: #FFFFFF !important;
-        border: none;
-        border-radius: 12px;
-        padding: 12px 24px;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 20px rgba(168, 85, 247, 0.4);
-        transition: all 0.3s ease;
-        width: 100%;
-    }
-    .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 30px rgba(168, 85, 247, 0.6);
-    }
-    </style>
-""",
-    unsafe_allow_html=True,
+    page_title="Cosmic MBTI & Vibe Sync", page_icon="✨", layout="centered"
 )
 
 # ==========================================
-# 2. English Questions Database
+# 1. DATA DEFINITIONS (Questions)
 # ==========================================
 STAGE1_QUESTIONS = [
     {
-        "q": "1. After attending a large social gathering, you usually feel:",
-        "a": "Energized and ready for more",
-        "b": "Drained and in need of solo time ",
+        "q": "At a crowded party, you usually:",
+        "a": "Enjoy talking with many people",
+        "b": "Stay with close friends or leave early",
         "dim": "EI",
     },
     {
-        "q": "2. When making important decisions, you tend to rely more on:",
-        "a": "Logical analysis and objective facts ",
-        "b": "Personal values and feelings of others ",
+        "q": "When processing information, you lean toward:",
+        "a": "Concrete facts and present details",
+        "b": "Patterns, future possibilities, and big picture",
+        "dim": "SN",
+    },
+    {
+        "q": "When making tough decisions, you prioritize:",
+        "a": "Objective logic and consistency",
+        "b": "Personal values and impact on people",
         "dim": "TF",
     },
     {
-        "q": "3. When planning your weekend, you prefer to:",
-        "a": "Schedule activities in advance and stick to them ",
-        "b": "Keep options open and go with the flow ",
+        "q": "In your daily life, you prefer:",
+        "a": "Having a clear plan and schedule",
+        "b": "Keeping options open and being spontaneous",
         "dim": "JP",
     },
     {
-        "q": "4. When learning something new, you are more drawn to:",
-        "a": "Practical applications and concrete details ",
-        "b": "Theoretical frameworks and abstract concepts ",
-        "dim": "SN",
-    },
-    {
-        "q": "5. In conversations, you usually prefer to:",
-        "a": "Think out loud and respond quickly ",
-        "b": "Reflect carefully before sharing your thoughts ",
+        "q": "After a stressful week, you regain energy by:",
+        "a": "Going out with friends or attending events",
+        "b": "Spending quiet time alone",
         "dim": "EI",
     },
     {
-        "q": (
-            "6. When a friend comes to you with a problem, your first instinct"
-            " is to:"
-        ),
-        "a": "Analyze the cause and offer practical solutions ",
-        "b": "Show empathy and offer emotional support ",
+        "q": "You trust information more if it is:",
+        "a": "Proven by past experience and practical evidence",
+        "b": "Inspiring and open to interpretation",
+        "dim": "SN",
+    },
+    {
+        "q": "People often describe you as more:",
+        "a": "Analytical and direct",
+        "b": "Empathetic and compassionate",
         "dim": "TF",
     },
     {
-        "q": "7. Your living space or desk is usually:",
-        "a": "Organized, with everything in its place ",
-        "b": "Relaxed and somewhat cluttered ",
+        "q": "When going on vacation, you usually:",
+        "a": "Book itineraries and reservations in advance",
+        "b": "Explore freely without a strict agenda",
         "dim": "JP",
     },
     {
-        "q": "8. How do you view the future?",
-        "a": "Grounded in realistic, present-day facts ",
-        "b": "Filled with endless possibilities and ideas ",
-        "dim": "SN",
-    },
-    {
-        "q": "9. In group projects, you tend to take on the role of:",
-        "a": "An active speaker driving the discussion ",
-        "b": "A quiet thinker focused on execution ",
+        "q": "In group conversations, you usually:",
+        "a": "Speak up quickly and share thoughts freely",
+        "b": "Listen first and speak when asked",
         "dim": "EI",
     },
     {
-        "q": "10. When faced with rules and guidelines:",
-        "a": (
-            "Follow them objectively to ensure fairness and efficiency "
-        ),
-        "b": (
-            "Consider exceptions based on human elements and circumstances "
-        ),
+        "q": "You are more fascinated by:",
+        "a": "How things work in reality today",
+        "b": "What could be created in the future",
+        "dim": "SN",
+    },
+    {
+        "q": "If a friend is wrong in an argument, you tend to:",
+        "a": "Point out the logical flaw directly",
+        "b": "Soften your words to protect their feelings",
         "dim": "TF",
     },
     {
-        "q": "11. Before going on a vacation, you usually:",
-        "a": "Create a detailed itinerary and packing list ",
-        "b": "Pack last minute and explore spontaneously ",
+        "q": "When working on projects, you feel comfortable when:",
+        "a": "Milestones and deadlines are strictly set",
+        "b": "Deadlines are flexible as long as progress is made",
         "dim": "JP",
     },
     {
-        "q": "12. You trust information more when it comes from:",
-        "a": "Direct experience and verified data ",
-        "b": "Intuitive insights and future trends ",
-        "dim": "SN",
-    },
-    {
-        "q": "13. Spending time completely alone feels like:",
-        "a": "Okay for a short while, but boring after time ",
-        "b": "An essential way to recharge your mental energy ",
+        "q": "When meeting new people, you:",
+        "a": "Initiate conversation easily",
+        "b": "Wait for them to reach out first",
         "dim": "EI",
     },
     {
-        "q": "14. When evaluating someone's performance, you value:",
-        "a": "Fairness, objectivity, and competence ",
-        "b": "Kindness, empathy, and personal effort ",
-        "dim": "TF",
+        "q": "You pay more attention to:",
+        "a": "Specific details and immediate observations",
+        "b": "Underlying meanings and symbolic connections",
+        "dim": "SN",
     },
     {
-        "q": "15. When dealing with an unexpected challenge, you prefer to:",
-        "a": "Rely on proven methods and past experience ",
-        "b": "Brainstorm novel and unconventional approaches ",
-        "dim": "SN",
+        "q": "You consider yourself more driven by:",
+        "a": "Head over heart",
+        "b": "Heart over head",
+        "dim": "TF",
     },
 ]
-
-
-def build_stage2_questions():
-  raw_questions = [
-      {
-          "q": "In social events, you naturally tend to:",
-          "a": "Initiate conversations with new people ",
-          "b": "Wait for others to approach you ",
-          "dim": "EI",
-      },
-      {
-          "q": "Your mental energy is primarily derived from:",
-          "a": "Interacting with the external world ",
-          "b": "Reflecting quietly in your inner world ",
-          "dim": "EI",
-      },
-      {
-          "q": "When processing thoughts, you usually:",
-          "a": "Speak as you think and discuss with others ",
-          "b": "Formulate ideas fully before speaking ",
-          "dim": "EI",
-      },
-      {
-          "q": "In group settings, you typically feel:",
-          "a": "Engaged, motivated, and highly interactive ",
-          "b": "Observant, cautious, and selective ",
-          "dim": "EI",
-      },
-      {
-          "q": "After a long and busy week, your ideal recovery is:",
-          "a": "Hanging out with a lively group of friends ",
-          "b": "Staying home alone with a cozy activity ",
-          "dim": "EI",
-      },
-      {
-          "q": "When starting a new project, you prefer to:",
-          "a": "Brainstorm out loud with a team ",
-          "b": "Research and outline on your own first ",
-          "dim": "EI",
-      },
-      {
-          "q": "How do you feel about being the center of attention?",
-          "a": "Comfortable and energized by it ",
-          "b": "Uncomfortable or preferred to be avoided ",
-          "dim": "EI",
-      },
-      {
-          "q": "Your communication style is generally:",
-          "a": "Expressive, fast-paced, and broad ",
-          "b": "Reserved, deep, and focused ",
-          "dim": "EI",
-      },
-      {
-          "q": "When facing a crisis, you first tend to:",
-          "a": "Reach out to others for immediate action ",
-          "b": "Pause silently to assess the situation ",
-          "dim": "EI",
-      },
-      {
-          "q": "When meeting distant acquaintances, you usually:",
-          "a": "Eagerly make small talk to keep things active ",
-          "b": "Nod politely and stick to necessary exchanges ",
-          "dim": "EI",
-      },
-      {
-          "q": "When processing complex information, you focus on:",
-          "a": "Specific facts, data, and present reality ",
-          "b": "Underlying patterns and future possibilities ",
-          "dim": "SN",
-      },
-      {
-          "q": "When describing an event, you prefer to:",
-          "a": "Stick to chronological details and facts ",
-          "b": "Use metaphors and convey the overall impression ",
-          "dim": "SN",
-      },
-      {
-          "q": "When encountering something new, your first reaction is:",
-          "a": "How can this be practically used? ",
-          "b": "What potential options does this open up? ",
-          "dim": "SN",
-      },
-      {
-          "q": "You trust information more when it comes from:",
-          "a": "Direct sensory experience and proven history ",
-          "b": "Intuitive hunches and logical theories ",
-          "dim": "SN",
-      },
-      {
-          "q": "You are naturally more attracted to:",
-          "a": "Concrete facts and hands-on execution ",
-          "b": "Abstract theories and imaginative concepts ",
-          "dim": "SN",
-      },
-      {
-          "q": "When reading a book or watching a movie, you prefer:",
-          "a": "Clear storylines with realistic scenarios ",
-          "b": "Symbolic plots with room for interpretation ",
-          "dim": "SN",
-      },
-      {
-          "q": "People often describe you as:",
-          "a": "Grounded, sensible, and realistic ",
-          "b": "Creative, visionary, and unconventional ",
-          "dim": "SN",
-      },
-      {
-          "q": "When solving a problem, you prefer to use:",
-          "a": "Standard operating procedures that work ",
-          "b": "Novel and innovative strategies ",
-          "dim": "SN",
-      },
-      {
-          "q": "When learning a new subject, you like to start with:",
-          "a": "Step-by-step examples and concrete facts ",
-          "b": "Big-picture concepts and overall architecture ",
-          "dim": "SN",
-      },
-      {
-          "q": "In daily conversations, you tend to talk more about:",
-          "a": "What actually happened and practical matters ",
-          "b": "Ideas, meanings, and future visions ",
-          "dim": "SN",
-      },
-      {
-          "q": "During disagreements, you prioritize:",
-          "a": "Truth, principles, and logical consistency ",
-          "b": "Harmony, empathy, and mutual understanding ",
-          "dim": "TF",
-      },
-      {
-          "q": "When evaluating a proposed idea, you look at:",
-          "a": "Efficiency, feasibility, and objective logic ",
-          "b": "Its human impact and team morale ",
-          "dim": "TF",
-      },
-      {
-          "q": "When expressing an opinion, you tend to:",
-          "a": "Speak candidly, directly, and objectively ",
-          "b": "Choose words carefully to protect feelings ",
-          "dim": "TF",
-      },
-      {
-          "q": "When critique is necessary, you aim to be:",
-          "a": "Truthful and constructive, even if harsh ",
-          "b": "Encouraging and gentle, preserving relationships ",
-          "dim": "TF",
-      },
-      {
-          "q": "When making difficult team decisions, you rely on:",
-          "a": "Impartial rules and metrics ",
-          "b": "Individual circumstances and personal needs ",
-          "dim": "TF",
-      },
-      {
-          "q": "What bothers you more in a debate?",
-          "a": "Illogical arguments and fallacies ",
-          "b": "Insensitive remarks and harsh tones ",
-          "dim": "TF",
-      },
-      {
-          "q": "When a colleague struggles, your instinct is to:",
-          "a": "Troubleshoot their practical problem ",
-          "b": "Offer emotional comfort and validation ",
-          "dim": "TF",
-      },
-      {
-          "q": "You feel most accomplished when you achieve:",
-          "a": "A high-quality, objective result ",
-          "b": "Deep personal connection or appreciation ",
-          "dim": "TF",
-      },
-      {
-          "q": "In a leadership role, you focus primarily on:",
-          "a": "Task optimization and performance metrics ",
-          "b": "Team cohesion and individual growth ",
-          "dim": "TF",
-      },
-      {
-          "q": "When judging an action, you value more:",
-          "a": "Fairness and consistency ",
-          "b": "Compassion and mercy ",
-          "dim": "TF",
-      },
-      {
-          "q": "When working toward long-term goals, you like to:",
-          "a": "Set clear benchmarks and follow a structured plan ",
-          "b": "Adapt as you go and explore flexible pathways ",
-          "dim": "JP",
-      },
-      {
-          "q": "As deadlines approach, you tend to:",
-          "a": "Finish early to avoid stress ",
-          "b": "Feel inspired and work best under pressure ",
-          "dim": "JP",
-      },
-      {
-          "q": "Your work and living space is usually:",
-          "a": "Structured, organized, and tidy ",
-          "b": "Spontaneous, adaptable, and flexible ",
-          "dim": "JP",
-      },
-      {
-          "q": "How do you feel about sudden plan changes?",
-          "a": "Disrupted and frustrated ",
-          "b": "Excited and adaptable ",
-          "dim": "JP",
-      },
-      {
-          "q": "When starting your workday, you prefer to:",
-          "a": "Follow a predetermined to-do list ",
-          "b": "Address whatever feels most pressing or interesting ",
-          "dim": "JP",
-      },
-      {
-          "q": "Decisions and choices give you a sense of:",
-          "a": "Relief and closure once settled ",
-          "b": "Constraint; you like keeping options open ",
-          "dim": "JP",
-      },
-      {
-          "q": "When packing for a trip, you usually:",
-          "a": "Categorize items days in advance ",
-          "b": "Throw things in the bag right before leaving ",
-          "dim": "JP",
-      },
-      {
-          "q": "In your daily life, you prefer to have:",
-          "a": "Clear routines and predictable schedules ",
-          "b": "Freedom to act spontaneously without fixed schedules ",
-          "dim": "JP",
-      },
-      {
-          "q": "When given a long-term project, you prefer to:",
-          "a": "Divide it into micro-tasks and complete them steadily ",
-          "b": "Explore broad ideas first and do bursts of intense work ",
-          "dim": "JP",
-      },
-      {
-          "q": "You feel most comfortable when things are:",
-          "a": "Settled, organized, and decided ",
-          "b": "Open-ended, flexible, and subject to change ",
-          "dim": "JP",
-      },
-  ]
-
-  questions = []
-  for idx, item in enumerate(raw_questions, start=1):
-    questions.append({
-        "q": f"Q{idx}. {item['q']}",
-        "a": item["a"],
-        "b": item["b"],
-        "dim": item["dim"],
-    })
-  return questions
-
-
-STAGE2_QUESTIONS = build_stage2_questions()
+STAGE2_QUESTIONS = [
+    {
+        "q": "In team discussions, you naturally:",
+        "a": "Lead the conversation and think aloud",
+        "b": "Reflect internally before speaking",
+        "dim": "EI",
+    },
+    {
+        "q": "You prefer instructions that are:",
+        "a": "Step-by-step and explicit",
+        "b": "Conceptual and open-ended",
+        "dim": "SN",
+    },
+    {
+        "q": "When giving feedback, you focus on:",
+        "a": "Constructive criticism and accuracy",
+        "b": "Encouragement and maintaining harmony",
+        "dim": "TF",
+    },
+    {
+        "q": "Your workspace is usually:",
+        "a": "Organized and structured",
+        "b": "Casual and flexible",
+        "dim": "JP",
+    },
+    {
+        "q": "Networking events make you feel:",
+        "a": "Energized and excited",
+        "b": "Drained and eager to leave",
+        "dim": "EI",
+    },
+    {
+        "q": "You are more drawn to books/movies about:",
+        "a": "Real historical events or true stories",
+        "b": "Fantasy, sci-fi, or deep philosophical themes",
+        "dim": "SN",
+    },
+    {
+        "q": "You feel most accomplished when you achieve:",
+        "a": "An efficient and flawless outcome",
+        "b": "A outcome that brings deep joy to others",
+        "dim": "TF",
+    },
+    {
+        "q": "Unexpected changes to your daily plan make you:",
+        "a": "Annoyed or stressed",
+        "b": "Adaptable and excited for something new",
+        "dim": "JP",
+    },
+    {
+        "q": "You tend to have:",
+        "a": "A wide circle of acquaintances",
+        "b": "A few deeply intimate friendships",
+        "dim": "EI",
+    },
+    {
+        "q": "When learning something new, you prefer:",
+        "a": "Hands-on practice and real examples",
+        "b": "Understanding theories and core concepts first",
+        "dim": "SN",
+    },
+    {
+        "q": "When resolving conflict, you aim for:",
+        "a": "Fairness based on facts",
+        "b": "Harmony based on mutual understanding",
+        "dim": "TF",
+    },
+    {
+        "q": "To-do lists are something you:",
+        "a": "Rely on daily and cross items off rigorously",
+        "b": "Make occasionally but rarely stick to strictly",
+        "dim": "JP",
+    },
+    {
+        "q": "In a social group, you are often seen as:",
+        "a": "The outgoing initiator",
+        "b": "The quiet observer",
+        "dim": "EI",
+    },
+    {
+        "q": "You focus more on:",
+        "a": "What is actually happening right now",
+        "b": "What possibilities lie ahead",
+        "dim": "SN",
+    },
+    {
+        "q": "When evaluating success, you value:",
+        "a": "Measurable results and metrics",
+        "b": "Personal growth and human connection",
+        "dim": "TF",
+    },
+    {
+        "q": "Your working style is best described as:",
+        "a": "Steady pace with early completion",
+        "b": "Last-minute burst of energy near deadlines",
+        "dim": "JP",
+    },
+    {
+        "q": "You feel comfortable being the center of attention:",
+        "a": "Yes, I enjoy it",
+        "b": "No, I prefer remaining background",
+        "dim": "EI",
+    },
+    {
+        "q": "You tend to trust:",
+        "a": "Your past experience",
+        "b": "Your gut intuition",
+        "dim": "SN",
+    },
+    {
+        "q": "If someone asks for advice, you give:",
+        "a": "Practical solutions and actionable steps",
+        "b": "Emotional support and active listening",
+        "dim": "TF",
+    },
+    {
+        "q": "You prefer your life to feel:",
+        "a": "Settled and organized",
+        "b": "Flexible and evolving",
+        "dim": "JP",
+    },
+    {
+        "q": "After talking to people for hours, you feel:",
+        "a": "Supercharged",
+        "b": "Exhausted",
+        "dim": "EI",
+    },
+    {
+        "q": "You consider yourself more of a:",
+        "a": "Realistic practitioner",
+        "b": "Visionary dreamer",
+        "dim": "SN",
+    },
+    {
+        "q": "You care more about being:",
+        "a": "Right and truthful",
+        "b": "Kind and considerate",
+        "dim": "TF",
+    },
+    {
+        "q": "When starting a project, you prefer to:",
+        "a": "Outline the full schedule first",
+        "b": "Dive right in and figure it out as you go",
+        "dim": "JP",
+    },
+    {
+        "q": "In new environments, you:",
+        "a": "Adapt quickly and talk to strangers",
+        "b": "Take time to observe before stepping in",
+        "dim": "EI",
+    },
+    {
+        "q": "You find metaphor and allegory:",
+        "a": "Sometimes impractical or confusing",
+        "b": "Engaging and rich in meaning",
+        "dim": "SN",
+    },
+    {
+        "q": "When making decisions, you rely more on:",
+        "a": "Cold objective analysis",
+        "b": "Personal values and ethics",
+        "dim": "TF",
+    },
+    {
+        "q": "You prefer tasks with:",
+        "a": "Clear boundaries and guidelines",
+        "b": "Freedom to define your own approach",
+        "dim": "JP",
+    },
+    {
+        "q": "In social gatherings, you usually:",
+        "a": "Stay until late and keep social energy up",
+        "b": "Leave early to recharge",
+        "dim": "EI",
+    },
+    {
+        "q": "You pay attention to:",
+        "a": "Specific details and data points",
+        "b": "Overall trends and underlying meanings",
+        "dim": "SN",
+    },
+    {
+        "q": "You consider yourself more:",
+        "a": "Firm-minded and objective",
+        "b": "Gentle-hearted and accommodating",
+        "dim": "TF",
+    },
+    {
+        "q": "Your ideal weekend is:",
+        "a": "Planned out with activities",
+        "b": "Completely free-flowing",
+        "dim": "JP",
+    },
+    {
+        "q": "When faced with silence in a conversation, you:",
+        "a": "Fill it with a new topic",
+        "b": "Feel comfortable letting the silence sit",
+        "dim": "EI",
+    },
+    {
+        "q": "You prefer to focus on:",
+        "a": "Practical realities of today",
+        "b": "Future possibilities of tomorrow",
+        "dim": "SN",
+    },
+    {
+        "q": "Which quality do you value more in yourself?",
+        "a": "Rationality and clarity",
+        "b": "Compassion and warmth",
+        "dim": "TF",
+    },
+    {
+        "q": "Your workspace or desk is:",
+        "a": "Neat and well-arranged",
+        "b": "Cluttered but functional for you",
+        "dim": "JP",
+    },
+    {
+        "q": "When sharing ideas, you prefer to:",
+        "a": "Discuss in a group setting",
+        "b": "Write them down or talk one-on-one",
+        "dim": "EI",
+    },
+    {
+        "q": "You appreciate art mostly for its:",
+        "a": "Craftsmanship, skill, and technique",
+        "b": "Emotional resonance, symbolism, and depth",
+        "dim": "SN",
+    },
+    {
+        "q": "When helping a friend, you start with:",
+        "a": "Logical problem solving",
+        "b": "Emotional validation",
+        "dim": "TF",
+    },
+    {
+        "q": "You feel better when an event is:",
+        "a": "Decided and finalized",
+        "b": "Tentative and flexible",
+        "dim": "JP",
+    },
+]
 # ==========================================
-# 3. Helper Functions with Dynamic Model & Archetype Explanations
-# ==========================================
-def calculate_mbti(answers, questions):
-  scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
-  for idx, ans in answers.items():
-    if ans is None:
-      continue
-    q_info = questions[idx]
-    dim = q_info["dim"]
-    if ans == "A":
-      scores[dim[0]] += 1
-    elif ans == "B":
-      scores[dim[1]] += 1
-
-  mbti = ""
-  mbti += "E" if scores["E"] >= scores["I"] else "I"
-  mbti += "S" if scores["S"] >= scores["N"] else "N"
-  mbti += "T" if scores["T"] >= scores["F"] else "F"
-  mbti += "J" if scores["J"] >= scores["P"] else "P"
-  return mbti
-
-
-def get_eastern_element(year):
-  last_digit = year % 10
-  element_map = {
-      0: "Metal 🪙",
-      1: "Metal 🪙",
-      2: "Water 💧",
-      3: "Water 💧",
-      4: "Wood 🌿",
-      5: "Wood 🌿",
-      6: "Fire 💥",
-      7: "Fire 💥",
-      8: "Earth 🪐",
-      9: "Earth 🪐",
-  }
-  return element_map.get(last_digit, "Cosmic Energy ✨")
-
-
-def generate_ai_card(mbti, element):
-  # 西方视角下的五行原型释义映射表，帮助老外理解概念
-  element_explanations = {
-      "Metal": "Precision, Clarity & Inner Boundaries",
-      "Water": "Flow, Depth & Intuitive Wisdom",
-      "Wood": "Growth, Expansion & Creative Vision",
-      "Fire": "Passion, Charisma & Expressive Energy",
-      "Earth": "Grounding, Stability & Nurturing Strength",
-  }
-
-  clean_element = element.split()[0] if " " in element else element
-  meaning_tag = element_explanations.get(clean_element, "Cosmic Energy")
-
-  prompt = f"""
-    You are a modern intuitive counselor combining Western MBTI psychology with Eastern Five-Element Archetypes.
-    User's Profile:
-    - Confirmed MBTI: {mbti}
-    - Eastern Element: {element} (Core Psychological Vibe: {meaning_tag})
-
-    Generate a highly aesthetic, empowering "Energy Blueprint" report.
-    IMPORTANT: Western users may not know Eastern Five-Element philosophy. Briefly explain what {clean_element} energy represents in modern psychological/spiritual terms (e.g., Metal = clarity, precision, sharp focus, setting strong boundaries).
-
-    MUST respond ONLY with valid JSON in this exact structure:
-    {{
-        "archetype_title": "Short cool title (e.g. The Precision Idealist)",
-        "daily_vibe": "A concise 2-sentence insight explaining how {clean_element} energy ({meaning_tag}) interacts with their {mbti} cognitive style.",
-        "actionable_dos": "1 specific empowering advice for today.",
-        "actionable_donts": "1 thing to avoid today.",
-        "power_quote": "A 1-line catchy quote for Instagram story."
-    }}
-    """
-  api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
-  if not api_key:
-    raise ValueError("GROQ_API_KEY not found in Streamlit Secrets.")
-
-  client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
-
-  # 1. 动态获取你账号实际可用的 Groq 模型列表
-  try:
-    available_models_resp = client.models.list()
-    available_ids = [m.id for m in available_models_resp.data]
-  except Exception as e:
-    raise RuntimeError(f"无法获取 Groq 模型列表，请检查 API Key: {str(e)}")
-
-  if not available_ids:
-    raise RuntimeError("当前 Groq 账户下没有可用的模型。")
-
-  # 2. 依次匹配可用模型
-  errors = []
-  for model_name in available_ids:
-    try:
-      response = client.chat.completions.create(
-          model=model_name,
-          messages=[{"role": "user", "content": prompt}],
-          response_format={"type": "json_object"},
-          temperature=0.7,
-      )
-      return json.loads(response.choices[0].message.content)
-    except Exception as e:
-      errors.append(f"{model_name}: {str(e)}")
-      continue
-
-  raise RuntimeError("所有可用模型请求失败:\n" + "\n".join(errors))
-
-
-# ==========================================
-# 4. Main App Logic & Multi-Stage State
-# ==========================================
-if "step" not in st.session_state:
-  st.session_state.step = 1
-if "stage1_answers" not in st.session_state:
-  st.session_state.stage1_answers = {}
-if "stage2_answers" not in st.session_state:
-  st.session_state.stage2_answers = {}
-if "prelim_mbti" not in st.session_state:
-  st.session_state.prelim_mbti = ""
-if "final_mbti" not in st.session_state:
-  st.session_state.final_mbti = ""
-
-st.title("✨ COSMIC MBTI & VIBE SYNC")
-
-# ------------------------------------------
-# Stage 1: 15-Question Fast Assessment
-# ------------------------------------------
-if st.session_state.step == 1:
-  st.subheader("Stage 1: 15-Question Fast Screening")
-  st.caption(
-      "Answer according to your intuition to estimate your initial MBTI type."
-  )
-  st.progress(0.2)
-
-  with st.form("stage1_form"):
-    for i, q_data in enumerate(STAGE1_QUESTIONS):
-      st.write(f"**{q_data['q']}**")
-      st.session_state.stage1_answers[i] = st.radio(
-          label=f"Q{i+1}",
-          options=["A", "B"],
-          index=None,
-          format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
-          key=f"s1_q_{i}",
-          label_visibility="collapsed",
-      )
-      st.write("")
-
-    submit_s1 = st.form_submit_button("Submit Fast Assessment 🚀")
-    if submit_s1:
-      if None in st.session_state.stage1_answers.values() or len(
-          st.session_state.stage1_answers
-      ) < len(STAGE1_QUESTIONS):
-        st.warning("Please answer all questions before submitting!")
-      else:
-        st.session_state.prelim_mbti = calculate_mbti(
-            st.session_state.stage1_answers, STAGE1_QUESTIONS
-        )
-        st.session_state.step = 2
-        st.rerun()
-
-# ------------------------------------------
-# Stage 2: 40-Question Deep Assessment
-# ------------------------------------------
-elif st.session_state.step == 2:
-  st.subheader("Stage 2: 40-Question Deep Calibration")
-  st.info(
-      "Your preliminary MBTI estimation from Stage 1:"
-      f" **{st.session_state.prelim_mbti}**"
-  )
-  st.write(
-      "Please complete these 40 detailed questions to recalibrate and confirm"
-      " your final personality profile."
-  )
-  st.progress(0.6)
-
-  with st.form("stage2_form"):
-    for i, q_data in enumerate(STAGE2_QUESTIONS):
-      st.write(f"**{q_data['q']}**")
-      st.session_state.stage2_answers[i] = st.radio(
-          label=f"S2_Q{i+1}",
-          options=["A", "B"],
-          index=None,
-          format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
-          key=f"s2_q_{i}",
-          label_visibility="collapsed",
-      )
-      st.write("")
-
-    submit_s2 = st.form_submit_button("Submit Deep Calibration 🧬")
-    if submit_s2:
-      if None in st.session_state.stage2_answers.values() or len(
-          st.session_state.stage2_answers
-      ) < len(STAGE2_QUESTIONS):
-        st.warning("Please answer all questions before submitting!")
-      else:
-        st.session_state.final_mbti = calculate_mbti(
-            st.session_state.stage2_answers, STAGE2_QUESTIONS
-        )
-        st.session_state.step = 3
-        st.rerun()
-# ==========================================
-# 3. Helper Functions with Dynamic Model Matching
+# 2. HELPER FUNCTIONS
 # ==========================================
 def calculate_mbti(answers, questions):
   scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
@@ -673,7 +405,7 @@ def generate_ai_card(mbti, element):
     - Eastern Element: {element} (Core Psychological Vibe: {meaning_tag})
 
     Generate a highly aesthetic, empowering "Energy Blueprint" report.
-    IMPORTANT: Western users may not know Eastern Five-Element philosophy. Briefly explain what {clean_element} energy represents in modern psychological/spiritual terms (e.g., Metal = clarity, precision, sharp focus, setting strong boundaries).
+    IMPORTANT: Explain what {clean_element} energy represents in modern psychological terms.
 
     MUST respond ONLY with valid JSON in this exact structure:
     {{
@@ -716,23 +448,18 @@ def generate_ai_card(mbti, element):
   raise RuntimeError("所有可用模型请求失败:\n" + "\n".join(errors))
 
 
-# 静默保存订阅信息到后台数据库的预留函数
 def save_subscriber_to_db(email, mbti, element):
   try:
-    # 如果已配置 Supabase 数据库，取消注释下面几行代码即可自动同步：
-    # from supabase import create_client
-    # supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
-    # supabase.table("subscribers").upsert({"email": email, "mbti": mbti, "element": element}).execute()
-    pass
+    pass  # 预留用于保存数据库
   except Exception as e:
     print(f"Database save error: {e}")
 
 
 # ==========================================
-# 4. Main App Logic & Multi-Stage State
+# 3. MAIN APP LOGIC
 # ==========================================
 if "step" not in st.session_state:
-  st.session_state.step = 0  # 0 为邮箱登录页
+  st.session_state.step = 0
 if "user_email" not in st.session_state:
   st.session_state.user_email = ""
 if "stage1_answers" not in st.session_state:
@@ -746,9 +473,7 @@ if "final_mbti" not in st.session_state:
 
 st.title("✨ COSMIC MBTI & VIBE SYNC")
 
-# ------------------------------------------
-# Stage 0: Welcome & Email Login
-# ------------------------------------------
+# --- Stage 0: Email Login ---
 if st.session_state.step == 0:
   st.subheader("Welcome to Your Cosmic Alignment Assessment")
   st.caption(
@@ -770,15 +495,13 @@ if st.session_state.step == 0:
       else:
         st.error("Please enter a valid email address to proceed.")
 
-# ------------------------------------------
-# Stage 1: 15-Question Fast Assessment
-# ------------------------------------------
+# --- Stage 1: 15 Questions ---
 elif st.session_state.step == 1:
   st.caption(f"Logged in as: `{st.session_state.user_email}`")
   st.subheader("Stage 1: 15-Question Fast Screening")
   st.progress(0.25)
 
-  with st.form("stage1_form"):
+  with st.form("stage1_form_unique"):
     for i, q_data in enumerate(STAGE1_QUESTIONS):
       st.write(f"**{q_data['q']}**")
       st.session_state.stage1_answers[i] = st.radio(
@@ -804,9 +527,7 @@ elif st.session_state.step == 1:
         st.session_state.step = 2
         st.rerun()
 
-# ------------------------------------------
-# Stage 2: 40-Question Deep Assessment
-# ------------------------------------------
+# --- Stage 2: 40 Questions ---
 elif st.session_state.step == 2:
   st.caption(f"Logged in as: `{st.session_state.user_email}`")
   st.subheader("Stage 2: 40-Question Deep Calibration")
@@ -816,7 +537,7 @@ elif st.session_state.step == 2:
   )
   st.progress(0.65)
 
-  with st.form("stage2_form"):
+  with st.form("stage2_form_unique"):
     for i, q_data in enumerate(STAGE2_QUESTIONS):
       st.write(f"**{q_data['q']}**")
       st.session_state.stage2_answers[i] = st.radio(
@@ -842,9 +563,7 @@ elif st.session_state.step == 2:
         st.session_state.step = 3
         st.rerun()
 
-# ------------------------------------------
-# Stage 3: Element & Blueprint Generation
-# ------------------------------------------
+# --- Stage 3: Card Generation ---
 elif st.session_state.step == 3:
   st.caption(f"Account: `{st.session_state.user_email}`")
   st.subheader("Stage 3: Energy Alignment")
@@ -872,7 +591,6 @@ elif st.session_state.step == 3:
       st.rerun()
 
   if gen_btn:
-    # 1. 后台隐式保存订阅数据
     save_subscriber_to_db(
         st.session_state.user_email, st.session_state.final_mbti, user_element
     )
@@ -1010,39 +728,3 @@ elif st.session_state.step == 3:
         components.html(card_html, height=600, scrolling=False)
       except Exception as e:
         st.error(f"Failed to generate card: {str(e)}")
-# ==========================================
-# 5. Email Newsletter Signup Section
-# ==========================================
-st.markdown("---")
-st.markdown("### 📬 Daily Cosmic Alignment")
-st.write(
-    "Want your personalized MBTI x Elemental vibe delivered to your inbox every"
-    " morning at 7:00 AM?"
-)
-
-with st.form("email_signup_form"):
-  user_email = st.text_input(
-      "Enter your email:", placeholder="yourname@example.com"
-  )
-  submit_email = st.form_submit_button("Subscribe for Tomorrow's Vibe ✨")
-
-  if submit_email:
-    if "@" in user_email and "." in user_email:
-      # 1. 保存用户的 MBTI、五行元素和邮箱数据
-      user_data = {
-          "email": user_email,
-          "mbti": st.session_state.final_mbti,
-          "element": user_element,
-      }
-
-      # TODO: 将 user_data 发送到 Supabase / Airtable 或写入数据库
-      # 示例：save_to_database(user_data)
-
-      st.success(
-          "🎉 You're on the list! Check your inbox tomorrow at 7:00 AM for your"
-          " daily alignment."
-      )
-    else:
-      st.error("Please enter a valid email address.")
-
-
