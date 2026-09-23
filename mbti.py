@@ -423,48 +423,48 @@ def build_stage2_questions():
 
 
 STAGE2_QUESTIONS = build_stage2_questions()
-# ==========================================
+ # ==========================================
 # 3. Helper Functions
 # ==========================================
 def calculate_mbti(answers, questions):
-    scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
-    for idx, ans in answers.items():
-        if ans is None:
-            continue
-        q_info = questions[idx]
-        dim = q_info["dim"]
-        if ans == "A":
-            scores[dim[0]] += 1
-        elif ans == "B":
-            scores[dim[1]] += 1
+  scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
+  for idx, ans in answers.items():
+    if ans is None:
+      continue
+    q_info = questions[idx]
+    dim = q_info["dim"]
+    if ans == "A":
+      scores[dim[0]] += 1
+    elif ans == "B":
+      scores[dim[1]] += 1
 
-    mbti = ""
-    mbti += "E" if scores["E"] >= scores["I"] else "I"
-    mbti += "S" if scores["S"] >= scores["N"] else "N"
-    mbti += "T" if scores["T"] >= scores["F"] else "F"
-    mbti += "J" if scores["J"] >= scores["P"] else "P"
-    return mbti
+  mbti = ""
+  mbti += "E" if scores["E"] >= scores["I"] else "I"
+  mbti += "S" if scores["S"] >= scores["N"] else "N"
+  mbti += "T" if scores["T"] >= scores["F"] else "F"
+  mbti += "J" if scores["J"] >= scores["P"] else "P"
+  return mbti
 
 
 def get_eastern_element(year):
-    last_digit = year % 10
-    element_map = {
-        0: "Metal 🪙",
-        1: "Metal 🪙",
-        2: "Water 💧",
-        3: "Water 💧",
-        4: "Wood 🌿",
-        5: "Wood 🌿",
-        6: "Fire 💥",
-        7: "Fire 💥",
-        8: "Earth 🪐",
-        9: "Earth 🪐",
-    }
-    return element_map.get(last_digit, "Cosmic Energy ✨")
+  last_digit = year % 10
+  element_map = {
+      0: "Metal 🪙",
+      1: "Metal 🪙",
+      2: "Water 💧",
+      3: "Water 💧",
+      4: "Wood 🌿",
+      5: "Wood 🌿",
+      6: "Fire 💥",
+      7: "Fire 💥",
+      8: "Earth 🪐",
+      9: "Earth 🪐",
+  }
+  return element_map.get(last_digit, "Cosmic Energy ✨")
 
 
 def generate_ai_card(mbti, element):
-    prompt = f"""
+  prompt = f"""
     You are a modern intuitive counselor combining Western MBTI psychology with Eastern Five-Element Archetypes.
     User's Profile:
     - Confirmed MBTI: {mbti}
@@ -482,32 +482,34 @@ def generate_ai_card(mbti, element):
         "power_quote": "A 1-line catchy quote for Instagram story."
     }}
     """
-    api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
-    if not api_key:
-        raise ValueError("GROQ_API_KEY not found in Streamlit Secrets.")
+  api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+  if not api_key:
+    raise ValueError("GROQ_API_KEY not found in Streamlit Secrets.")
 
-    client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        response_format={"type": "json_object"},
-    )
-    return json.loads(response.choices[0].message.content)
+  client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
+
+  # 修正模型名称为 Groq 当前稳定模型 llama-3.1-70b-versatile
+  response = client.chat.completions.create(
+      model="llama-3.1-70b-versatile",
+      messages=[{"role": "user", "content": prompt}],
+      response_format={"type": "json_object"},
+  )
+  return json.loads(response.choices[0].message.content)
 
 
 # ==========================================
 # 4. Main App Logic & Multi-Stage State
 # ==========================================
 if "step" not in st.session_state:
-    st.session_state.step = 1
+  st.session_state.step = 1
 if "stage1_answers" not in st.session_state:
-    st.session_state.stage1_answers = {}
+  st.session_state.stage1_answers = {}
 if "stage2_answers" not in st.session_state:
-    st.session_state.stage2_answers = {}
+  st.session_state.stage2_answers = {}
 if "prelim_mbti" not in st.session_state:
-    st.session_state.prelim_mbti = ""
+  st.session_state.prelim_mbti = ""
 if "final_mbti" not in st.session_state:
-    st.session_state.final_mbti = ""
+  st.session_state.final_mbti = ""
 
 st.title("✨ COSMIC MBTI & VIBE SYNC")
 
@@ -515,113 +517,113 @@ st.title("✨ COSMIC MBTI & VIBE SYNC")
 # Stage 1: 15-Question Fast Assessment
 # ------------------------------------------
 if st.session_state.step == 1:
-    st.subheader("Stage 1: 15-Question Fast Screening")
-    st.caption(
-        "Answer according to your intuition to estimate your initial MBTI type."
-    )
-    st.progress(0.2)
+  st.subheader("Stage 1: 15-Question Fast Screening")
+  st.caption(
+      "Answer according to your intuition to estimate your initial MBTI type."
+  )
+  st.progress(0.2)
 
-    with st.form("stage1_form"):
-        for i, q_data in enumerate(STAGE1_QUESTIONS):
-            st.write(f"**{q_data['q']}**")
-            st.session_state.stage1_answers[i] = st.radio(
-                label=f"Q{i+1}",
-                options=["A", "B"],
-                index=None,
-                format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
-                key=f"s1_q_{i}",
-                label_visibility="collapsed",
-            )
-            st.write("")
+  with st.form("stage1_form"):
+    for i, q_data in enumerate(STAGE1_QUESTIONS):
+      st.write(f"**{q_data['q']}**")
+      st.session_state.stage1_answers[i] = st.radio(
+          label=f"Q{i+1}",
+          options=["A", "B"],
+          index=None,
+          format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
+          key=f"s1_q_{i}",
+          label_visibility="collapsed",
+      )
+      st.write("")
 
-        submit_s1 = st.form_submit_button("Submit Fast Assessment 🚀")
-        if submit_s1:
-            if None in st.session_state.stage1_answers.values() or len(
-                st.session_state.stage1_answers
-            ) < len(STAGE1_QUESTIONS):
-                st.warning("Please answer all questions before submitting!")
-            else:
-                st.session_state.prelim_mbti = calculate_mbti(
-                    st.session_state.stage1_answers, STAGE1_QUESTIONS
-                )
-                st.session_state.step = 2
-                st.rerun()
+    submit_s1 = st.form_submit_button("Submit Fast Assessment 🚀")
+    if submit_s1:
+      if None in st.session_state.stage1_answers.values() or len(
+          st.session_state.stage1_answers
+      ) < len(STAGE1_QUESTIONS):
+        st.warning("Please answer all questions before submitting!")
+      else:
+        st.session_state.prelim_mbti = calculate_mbti(
+            st.session_state.stage1_answers, STAGE1_QUESTIONS
+        )
+        st.session_state.step = 2
+        st.rerun()
 
 # ------------------------------------------
 # Stage 2: 40-Question Deep Assessment
 # ------------------------------------------
 elif st.session_state.step == 2:
-    st.subheader("Stage 2: 40-Question Deep Calibration")
-    st.info(
-        "Your preliminary MBTI estimation from Stage 1:"
-        f" **{st.session_state.prelim_mbti}**"
-    )
-    st.write(
-        "Please complete these 40 detailed questions to recalibrate and confirm"
-        " your final personality profile."
-    )
-    st.progress(0.6)
+  st.subheader("Stage 2: 40-Question Deep Calibration")
+  st.info(
+      "Your preliminary MBTI estimation from Stage 1:"
+      f" **{st.session_state.prelim_mbti}**"
+  )
+  st.write(
+      "Please complete these 40 detailed questions to recalibrate and confirm"
+      " your final personality profile."
+  )
+  st.progress(0.6)
 
-    with st.form("stage2_form"):
-        for i, q_data in enumerate(STAGE2_QUESTIONS):
-            st.write(f"**{q_data['q']}**")
-            st.session_state.stage2_answers[i] = st.radio(
-                label=f"S2_Q{i+1}",
-                options=["A", "B"],
-                index=None,
-                format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
-                key=f"s2_q_{i}",
-                label_visibility="collapsed",
-            )
-            st.write("")
+  with st.form("stage2_form"):
+    for i, q_data in enumerate(STAGE2_QUESTIONS):
+      st.write(f"**{q_data['q']}**")
+      st.session_state.stage2_answers[i] = st.radio(
+          label=f"S2_Q{i+1}",
+          options=["A", "B"],
+          index=None,
+          format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
+          key=f"s2_q_{i}",
+          label_visibility="collapsed",
+      )
+      st.write("")
 
-        submit_s2 = st.form_submit_button("Submit Deep Calibration 🧬")
-        if submit_s2:
-            if None in st.session_state.stage2_answers.values() or len(
-                st.session_state.stage2_answers
-            ) < len(STAGE2_QUESTIONS):
-                st.warning("Please answer all questions before submitting!")
-            else:
-                st.session_state.final_mbti = calculate_mbti(
-                    st.session_state.stage2_answers, STAGE2_QUESTIONS
-                )
-                st.session_state.step = 3
-                st.rerun()
+    submit_s2 = st.form_submit_button("Submit Deep Calibration 🧬")
+    if submit_s2:
+      if None in st.session_state.stage2_answers.values() or len(
+          st.session_state.stage2_answers
+      ) < len(STAGE2_QUESTIONS):
+        st.warning("Please answer all questions before submitting!")
+      else:
+        st.session_state.final_mbti = calculate_mbti(
+            st.session_state.stage2_answers, STAGE2_QUESTIONS
+        )
+        st.session_state.step = 3
+        st.rerun()
 
 # ------------------------------------------
 # Stage 3: Birth Year + Eastern Element Card
 # ------------------------------------------
 elif st.session_state.step == 3:
-    st.subheader("Stage 3: Energy Alignment & Blueprint Generation")
-    st.success(
-        "🎉 Calibration Complete! Your final confirmed MBTI is:"
-        f" **{st.session_state.final_mbti}**"
-    )
-    st.progress(1.0)
+  st.subheader("Stage 3: Energy Alignment & Blueprint Generation")
+  st.success(
+      "🎉 Calibration Complete! Your final confirmed MBTI is:"
+      f" **{st.session_state.final_mbti}**"
+  )
+  st.progress(1.0)
 
-    birth_year = st.number_input(
-        "Select your birth year (To calculate your Eastern Element):",
-        min_value=1950,
-        max_value=2026,
-        value=2000,
-    )
-    user_element = get_eastern_element(birth_year)
-    st.write(f"Your Eastern Archetypal Element: **{user_element}**")
+  birth_year = st.number_input(
+      "Select your birth year (To calculate your Eastern Element):",
+      min_value=1950,
+      max_value=2026,
+      value=2000,
+  )
+  user_element = get_eastern_element(birth_year)
+  st.write(f"Your Eastern Archetypal Element: **{user_element}**")
 
-    col_gen, col_reset = st.columns([3, 1])
-    with col_gen:
-        gen_btn = st.button("Generate Cosmic Energy Blueprint ✨")
-    with col_reset:
-        if st.button("Restart 🔄"):
-            st.session_state.step = 1
-            st.rerun()
+  col_gen, col_reset = st.columns([3, 1])
+  with col_gen:
+    gen_btn = st.button("Generate Cosmic Energy Blueprint ✨")
+  with col_reset:
+    if st.button("Restart 🔄"):
+      st.session_state.step = 1
+      st.rerun()
 
-    if gen_btn:
-        with st.spinner("Synthesizing MBTI and Eastern Archetypes..."):
-            try:
-                data = generate_ai_card(st.session_state.final_mbti, user_element)
+  if gen_btn:
+    with st.spinner("Synthesizing MBTI and Eastern Archetypes..."):
+      try:
+        data = generate_ai_card(st.session_state.final_mbti, user_element)
 
-                card_html = f"""
+        card_html = f"""
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -747,7 +749,7 @@ elif st.session_state.step == 3:
                 </html>
                 """
 
-                components.html(card_html, height=460, scrolling=False)
-            except Exception as e:
-                st.error(f"Failed to generate card: {str(e)}")
+        components.html(card_html, height=460, scrolling=False)
+      except Exception as e:
+        st.error(f"Failed to generate card: {str(e)}")
 
