@@ -6,7 +6,7 @@ import io
 from PIL import Image, ImageDraw, ImageFont
 
 # ==========================================
-# 1. 页面基本配置 (页面标题、图标、极简暗黑风样式)
+# 1. Page Configuration & Dark Cyber Theme
 # ==========================================
 st.set_page_config(
     page_title="Cosmic Vibe Sync",
@@ -14,7 +14,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# 注入 CSS 打造黑白极简/赛博神秘感 UI (Minimalist Mysticism)
+# Custom CSS for minimalist dark-mode aesthetic
 st.markdown("""
     <style>
     .main {
@@ -42,10 +42,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 2. 逻辑辅助函数 (五行计算与 OpenAI 调用)
+# 2. Core Helper Functions
 # ==========================================
 def get_eastern_element(year):
-    """根据出生年份简单映射东方五行元素 (Eastern Element)"""
+    """Maps birth year to Eastern Five Elements Archetype"""
     last_digit = year % 10
     element_map = {
         0: "Metal", 1: "Metal",
@@ -57,7 +57,7 @@ def get_eastern_element(year):
     return element_map.get(last_digit, "Cosmic Energy")
 
 def generate_insights_via_ai(mbti, element):
-    """调用 OpenAI 生成符合美式语境的心理学/能量解读"""
+    """Fetches modern intuitive insight using OpenAI GPT-4o-mini"""
     prompt = f"""
     You are a modern intuitive counselor combining Western MBTI psychology with Eastern Five-Element Archetypes.
     User's Profile:
@@ -76,9 +76,12 @@ def generate_insights_via_ai(mbti, element):
     }}
     """
     
-    # 填入你的真实 OpenAI API Key
-    OPENAI_API_KEY = "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"
+    # Securely retrieve the API Key from Streamlit Secrets or Environment Variables
+    api_key = st.secrets.get("OPENAI_API_KEY") or os.getenv("OPENAI_API_KEY")
     
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY not found. Please configure it in your Streamlit Secrets.")
+
     client = openai.OpenAI(api_key=api_key)
     response = client.chat.completions.create(
         model="gpt-4o-mini",
@@ -89,24 +92,23 @@ def generate_insights_via_ai(mbti, element):
     return json.loads(response.choices[0].message.content)
 
 def create_social_card(mbti, element, title, quote):
-    """动态生成极简高颜值图片卡片 (Social Share Card)"""
+    """Generates a dynamic social share card image"""
     img = Image.new('RGB', (600, 600), color='#121215')
     draw = ImageDraw.Draw(img)
     
-    # 绘制外边框线
+    # Outer Frame
     draw.rectangle([20, 20, 580, 580], outline='#33333E', width=2)
     
-    # 写入文本信息
+    # Typography
     draw.text((50, 60), "COSMIC VIBE SYNC", fill='#8A2BE2')
     draw.text((50, 120), f"TYPE: {mbti} × {element.upper()}", fill='#888888')
     draw.text((50, 180), title, fill='#FFFFFF')
     
-    # 分割线
+    # Divider Line
     draw.line([(50, 250), (550, 250)], fill='#33333E', width=1)
     
-    # 金句
+    # Story Quote
     draw.text((50, 300), f'"{quote}"', fill='#E0E0E0')
-    
     draw.text((50, 520), "→ Discover your vibe: cosmicvibe.app", fill='#666666')
     
     buf = io.BytesIO()
@@ -114,37 +116,35 @@ def create_social_card(mbti, element, title, quote):
     return buf.getvalue()
 
 # ==========================================
-# 3. 页面 UI 布局与逻辑响应
+# 3. User Interface & Page Layout
 # ==========================================
 st.title("✨ COSMIC VIBE SYNC")
 st.caption("Synthesizing MBTI Cognitive Functions with Eastern Archetypal Energies.")
 
 st.markdown("---")
 
-# 用户输入区
+# User Input Controls
 col1, col2 = st.columns(2)
 
 with col1:
     mbti_list = ["INTJ", "INTP", "ENTJ", "ENTP", "INFJ", "INFP", "ENFJ", "ENFP",
                  "ISTJ", "ISFJ", "ESTJ", "ESFJ", "ISTP", "ISFP", "ESTP", "ESFP"]
-    selected_mbti = st.selectbox("Your MBTI Type", mbti_list)
+    selected_mbti = st.selectbox("Select Your MBTI Type", mbti_list)
 
 with col2:
-    birth_year = st.number_input("Birth Year", min_value=1950, max_value=2026, value=2000)
+    birth_year = st.number_input("Select Birth Year", min_value=1950, max_value=2026, value=2000)
 
 user_element = get_eastern_element(birth_year)
 
 st.write(f"Your Eastern Core Element: **{user_element}**")
 
-# 触发生成按钮
+# Trigger Button
 if st.button("Generate Energy Blueprint"):
-    with st.spinner("Aligning cosmic frequencies & AI analysis..."):
+    with st.spinner("Aligning cosmic frequencies & generating analysis..."):
         try:
             data = generate_insights_via_ai(selected_mbti, user_element)
             
             st.markdown("---")
-            
-            # 展现 AI 生成结果
             st.subheader(f"🔮 Archetype: {data['archetype_title']}")
             st.markdown(f"**Daily Energy Vibe:**\n{data['daily_vibe']}")
             
@@ -154,7 +154,7 @@ if st.button("Generate Energy Blueprint"):
             with col_b:
                 st.error(f"**Don't:** {data['actionable_donts']}")
             
-            # 生成社交共享卡片
+            # Shareable Social Card Display
             st.markdown("### 📸 Your Shareable Card")
             card_img_bytes = create_social_card(
                 selected_mbti, 
@@ -165,7 +165,6 @@ if st.button("Generate Energy Blueprint"):
             
             st.image(card_img_bytes, caption="Press & hold / Right-click to save for your Story")
             
-            # 下载按钮
             st.download_button(
                 label="Download Story Card",
                 data=card_img_bytes,
@@ -175,3 +174,5 @@ if st.button("Generate Energy Blueprint"):
 
         except Exception as e:
             st.error(f"Error generating insight: {str(e)}")
+
+
