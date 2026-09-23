@@ -15,9 +15,11 @@ st.set_page_config(
 
 st.markdown("""
     <style>
-    .main {
-        background: #090A0F;
-        color: #F0F0F2;
+    /* 强制单选框选项文字为深黑色加粗，提高清晰度 */
+    .stRadio p, .stRadio div, div[role="radiogroup"] label p {
+        color: #111827 !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
     }
     .stButton>button {
         background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
@@ -34,9 +36,6 @@ st.markdown("""
     .stButton>button:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 30px rgba(168, 85, 247, 0.6);
-    }
-    .stRadio label {
-        color: #e2e8f0 !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -180,7 +179,7 @@ if st.session_state.step == 1:
     
     with st.form("stage1_form"):
         for i, q_data in enumerate(STAGE1_QUESTIONS):
-            st.write(q_data["q"])
+            st.write(f"**{q_data['q']}**")
             st.session_state.stage1_answers[i] = st.radio(
                 label=f"Q{i+1}",
                 options=["A", "B"],
@@ -211,7 +210,7 @@ elif st.session_state.step == 2:
     
     with st.form("stage2_form"):
         for i, q_data in enumerate(STAGE2_QUESTIONS):
-            st.write(q_data["q"])
+            st.write(f"**{q_data['q']}**")
             st.session_state.stage2_answers[i] = st.radio(
                 label=f"S2_Q{i+1}",
                 options=["A", "B"],
