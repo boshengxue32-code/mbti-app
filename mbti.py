@@ -482,12 +482,12 @@ def generate_ai_card(mbti, element):
 
   client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
-  # 更新为 Groq 当前可用且最稳定的模型列表 (优先级从高到低)
+  # 修正：采用 Groq 当前官方正式支持的标准模型 ID
   candidate_models = [
-      "llama-3.3-70b-versatile",  # 旗舰主力模型 (推荐)
-      "llama-3.1-8b-instant",  # 轻量高频模型
-      "qwen-2.5-32b",  # 高性能通用备用模型
-      "deepseek-r1-distill-llama-70b",  # 推理能力强力的备用模型
+      "openai/gpt-oss-120b",  # 主力通用大模型
+      "openai/gpt-oss-20b",  # 高速备用模型
+      "qwen/qwen3.8-27b",  # Qwen 备用路线
+      "llama-3.3-70b-versatile",  # 备用 Llama 路线
   ]
 
   errors = []
