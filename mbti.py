@@ -16,7 +16,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* 1. 默认/浅色模式：文字自动设为深黑色 */
+    /* 适配深色/浅色模式文字颜色 */
     .stRadio p, .stRadio div, div[role="radiogroup"] label p, div[role="radiogroup"] span {
         color: #1f2937 !important;
         font-weight: 600 !important;
@@ -24,14 +24,12 @@ st.markdown(
         opacity: 1 !important;
     }
 
-    /* 2. 深色/暗黑模式：文字自动变更成纯白色 */
     @media (prefers-color-scheme: dark) {
         .stRadio p, .stRadio div, div[role="radiogroup"] label p, div[role="radiogroup"] span {
             color: #FFFFFF !important;
         }
     }
 
-    /* 3. 针对 Streamlit 自带主题属性的强兼容处理 */
     [data-theme="dark"] .stRadio p, 
     [data-theme="dark"] div[role="radiogroup"] label p {
         color: #FFFFFF !important;
@@ -484,9 +482,9 @@ def generate_ai_card(mbti, element):
 
   client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
-  # 替换为 Groq 长久稳定支持的模型名称：llama3-70b-8192
+  # 已更新为 Groq 官方支持的最新旗舰模型：llama-3.3-70b-versatile
   response = client.chat.completions.create(
-      model="llama3-70b-8192",
+      model="llama-3.3-70b-versatile",
       messages=[{"role": "user", "content": prompt}],
       response_format={"type": "json_object"},
   )
