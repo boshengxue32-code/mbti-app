@@ -80,15 +80,15 @@ def generate_insights_via_ai(mbti, element):
     if not api_key:
         raise ValueError("GROQ_API_KEY not found. Please configure it in your Streamlit Secrets.")
 
-    # 使用 Groq 的免费 OpenAI 兼容接口
+    # 使用 Groq 的免费 API 接口
     client = OpenAI(
         api_key=api_key,
         base_url="https://api.groq.com/openai/v1"
     )
     
-    # 此处已修正模型名称为 Groq 目前可用的标准免费模型
+    # 修正为 Groq 全局兼容的标准免费模型 ID
     response = client.chat.completions.create(
-        model="llama-3.1-8b-instant",
+        model="llama3-8b-8192",
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"}
     )
