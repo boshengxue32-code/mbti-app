@@ -77,7 +77,7 @@ def generate_insights_via_ai(mbti, element):
     """
     
     # 填入你的真实 OpenAI API Key
-    api_key = "Sk-proj-76dLCZOCeU4jdBcv3LGbp6WBoRkJs4Eqt2or0ekiEnzg3lUzckmGyeXsIy1aDgniTc2tKnIfPHT3BlbkFJ6bJQeyti9S_5m33-nDqs5SRZYJ4VI61b3ZdNlSiist9ZJxRH3PoUVDFOxGH6iKmZ0ZPw6X1BYA"
+    OPENAI_API_KEY = "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"
     
     client = openai.OpenAI(api_key=api_key)
     response = client.chat.completions.create(
