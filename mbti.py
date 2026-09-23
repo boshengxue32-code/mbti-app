@@ -614,14 +614,242 @@ elif st.session_state.step == 2:
         )
         st.session_state.step = 3
         st.rerun()
+# ==========================================
+# 3. Helper Functions with Dynamic Model Matching
+# ==========================================
+def calculate_mbti(answers, questions):
+  scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
+  for idx, ans in answers.items():
+    if ans is None:
+      continue
+    q_info = questions[idx]
+    dim = q_info["dim"]
+    if ans == "A":
+      scores[dim[0]] += 1
+    elif ans == "B":
+      scores[dim[1]] += 1
+
+  mbti = ""
+  mbti += "E" if scores["E"] >= scores["I"] else "I"
+  mbti += "S" if scores["S"] >= scores["N"] else "N"
+  mbti += "T" if scores["T"] >= scores["F"] else "F"
+  mbti += "J" if scores["J"] >= scores["P"] else "P"
+  return mbti
+
+
+def get_eastern_element(year):
+  last_digit = year % 10
+  element_map = {
+      0: "Metal 🪙",
+      1: "Metal 🪙",
+      2: "Water 💧",
+      3: "Water 💧",
+      4: "Wood 🌿",
+      5: "Wood 🌿",
+      6: "Fire 💥",
+      7: "Fire 💥",
+      8: "Earth 🪐",
+      9: "Earth 🪐",
+  }
+  return element_map.get(last_digit, "Cosmic Energy ✨")
+
+
+def generate_ai_card(mbti, element):
+  element_explanations = {
+      "Metal": "Precision, Clarity & Inner Boundaries",
+      "Water": "Flow, Depth & Intuitive Wisdom",
+      "Wood": "Growth, Expansion & Creative Vision",
+      "Fire": "Passion, Charisma & Expressive Energy",
+      "Earth": "Grounding, Stability & Nurturing Strength",
+  }
+
+  clean_element = element.split()[0] if " " in element else element
+  meaning_tag = element_explanations.get(clean_element, "Cosmic Energy")
+
+  prompt = f"""
+    You are a modern intuitive counselor combining Western MBTI psychology with Eastern Five-Element Archetypes.
+    User's Profile:
+    - Confirmed MBTI: {mbti}
+    - Eastern Element: {element} (Core Psychological Vibe: {meaning_tag})
+
+    Generate a highly aesthetic, empowering "Energy Blueprint" report.
+    IMPORTANT: Western users may not know Eastern Five-Element philosophy. Briefly explain what {clean_element} energy represents in modern psychological/spiritual terms (e.g., Metal = clarity, precision, sharp focus, setting strong boundaries).
+
+    MUST respond ONLY with valid JSON in this exact structure:
+    {{
+        "archetype_title": "Short cool title (e.g. The Precision Idealist)",
+        "daily_vibe": "A concise 2-sentence insight explaining how {clean_element} energy ({meaning_tag}) interacts with their {mbti} cognitive style.",
+        "actionable_dos": "1 specific empowering advice for today.",
+        "actionable_donts": "1 thing to avoid today.",
+        "power_quote": "A 1-line catchy quote for Instagram story."
+    }}
+    """
+  api_key = st.secrets.get("GROQ_API_KEY") or os.getenv("GROQ_API_KEY")
+  if not api_key:
+    raise ValueError("GROQ_API_KEY not found in Streamlit Secrets.")
+
+  client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
+
+  try:
+    available_models_resp = client.models.list()
+    available_ids = [m.id for m in available_models_resp.data]
+  except Exception as e:
+    raise RuntimeError(f"无法获取 Groq 模型列表: {str(e)}")
+
+  if not available_ids:
+    raise RuntimeError("当前 Groq 账户下没有可用的模型。")
+
+  errors = []
+  for model_name in available_ids:
+    try:
+      response = client.chat.completions.create(
+          model=model_name,
+          messages=[{"role": "user", "content": prompt}],
+          response_format={"type": "json_object"},
+          temperature=0.7,
+      )
+      return json.loads(response.choices[0].message.content)
+    except Exception as e:
+      errors.append(f"{model_name}: {str(e)}")
+      continue
+
+  raise RuntimeError("所有可用模型请求失败:\n" + "\n".join(errors))
+
+
+# 静默保存订阅信息到后台数据库的预留函数
+def save_subscriber_to_db(email, mbti, element):
+  try:
+    # 如果已配置 Supabase 数据库，取消注释下面几行代码即可自动同步：
+    # from supabase import create_client
+    # supabase = create_client(st.secrets["SUPABASE_URL"], st.secrets["SUPABASE_KEY"])
+    # supabase.table("subscribers").upsert({"email": email, "mbti": mbti, "element": element}).execute()
+    pass
+  except Exception as e:
+    print(f"Database save error: {e}")
+
+
+# ==========================================
+# 4. Main App Logic & Multi-Stage State
+# ==========================================
+if "step" not in st.session_state:
+  st.session_state.step = 0  # 0 为邮箱登录页
+if "user_email" not in st.session_state:
+  st.session_state.user_email = ""
+if "stage1_answers" not in st.session_state:
+  st.session_state.stage1_answers = {}
+if "stage2_answers" not in st.session_state:
+  st.session_state.stage2_answers = {}
+if "prelim_mbti" not in st.session_state:
+  st.session_state.prelim_mbti = ""
+if "final_mbti" not in st.session_state:
+  st.session_state.final_mbti = ""
+
+st.title("✨ COSMIC MBTI & VIBE SYNC")
 
 # ------------------------------------------
-# Stage 3: Birth Year + Eastern Element Card
+# Stage 0: Welcome & Email Login
+# ------------------------------------------
+if st.session_state.step == 0:
+  st.subheader("Welcome to Your Cosmic Alignment Assessment")
+  st.caption(
+      "Enter your email to save your personality profile and begin your 2-stage"
+      " cosmic assessment."
+  )
+
+  with st.form("login_form"):
+    email_input = st.text_input(
+        "Enter your Email to start:", placeholder="yourname@example.com"
+    )
+    submit_login = st.form_submit_button("Start Assessment 🚀")
+
+    if submit_login:
+      if "@" in email_input and "." in email_input:
+        st.session_state.user_email = email_input.strip()
+        st.session_state.step = 1
+        st.rerun()
+      else:
+        st.error("Please enter a valid email address to proceed.")
+
+# ------------------------------------------
+# Stage 1: 15-Question Fast Assessment
+# ------------------------------------------
+elif st.session_state.step == 1:
+  st.caption(f"Logged in as: `{st.session_state.user_email}`")
+  st.subheader("Stage 1: 15-Question Fast Screening")
+  st.progress(0.25)
+
+  with st.form("stage1_form"):
+    for i, q_data in enumerate(STAGE1_QUESTIONS):
+      st.write(f"**{q_data['q']}**")
+      st.session_state.stage1_answers[i] = st.radio(
+          label=f"Q{i+1}",
+          options=["A", "B"],
+          index=None,
+          format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
+          key=f"s1_q_{i}",
+          label_visibility="collapsed",
+      )
+      st.write("")
+
+    submit_s1 = st.form_submit_button("Next Stage 🚀")
+    if submit_s1:
+      if None in st.session_state.stage1_answers.values() or len(
+          st.session_state.stage1_answers
+      ) < len(STAGE1_QUESTIONS):
+        st.warning("Please answer all questions before submitting!")
+      else:
+        st.session_state.prelim_mbti = calculate_mbti(
+            st.session_state.stage1_answers, STAGE1_QUESTIONS
+        )
+        st.session_state.step = 2
+        st.rerun()
+
+# ------------------------------------------
+# Stage 2: 40-Question Deep Assessment
+# ------------------------------------------
+elif st.session_state.step == 2:
+  st.caption(f"Logged in as: `{st.session_state.user_email}`")
+  st.subheader("Stage 2: 40-Question Deep Calibration")
+  st.info(
+      "Preliminary Alignment Result:"
+      f" **{st.session_state.prelim_mbti}**"
+  )
+  st.progress(0.65)
+
+  with st.form("stage2_form"):
+    for i, q_data in enumerate(STAGE2_QUESTIONS):
+      st.write(f"**{q_data['q']}**")
+      st.session_state.stage2_answers[i] = st.radio(
+          label=f"S2_Q{i+1}",
+          options=["A", "B"],
+          index=None,
+          format_func=lambda x, q=q_data: q["a"] if x == "A" else q["b"],
+          key=f"s2_q_{i}",
+          label_visibility="collapsed",
+      )
+      st.write("")
+
+    submit_s2 = st.form_submit_button("Confirm & Align 🧬")
+    if submit_s2:
+      if None in st.session_state.stage2_answers.values() or len(
+          st.session_state.stage2_answers
+      ) < len(STAGE2_QUESTIONS):
+        st.warning("Please answer all questions before submitting!")
+      else:
+        st.session_state.final_mbti = calculate_mbti(
+            st.session_state.stage2_answers, STAGE2_QUESTIONS
+        )
+        st.session_state.step = 3
+        st.rerun()
+
+# ------------------------------------------
+# Stage 3: Element & Blueprint Generation
 # ------------------------------------------
 elif st.session_state.step == 3:
-  st.subheader("Stage 3: Energy Alignment & Blueprint Generation")
+  st.caption(f"Account: `{st.session_state.user_email}`")
+  st.subheader("Stage 3: Energy Alignment")
   st.success(
-      "🎉 Calibration Complete! Your final confirmed MBTI is:"
+      "🎉 Calibration Complete! Your confirmed MBTI is:"
       f" **{st.session_state.final_mbti}**"
   )
   st.progress(1.0)
@@ -637,13 +865,18 @@ elif st.session_state.step == 3:
 
   col_gen, col_reset = st.columns([3, 1])
   with col_gen:
-    gen_btn = st.button("Generate Cosmic Energy Blueprint ✨")
+    gen_btn = st.button("Reveal My Energy Blueprint ✨")
   with col_reset:
     if st.button("Restart 🔄"):
-      st.session_state.step = 1
+      st.session_state.step = 0
       st.rerun()
 
   if gen_btn:
+    # 1. 后台隐式保存订阅数据
+    save_subscriber_to_db(
+        st.session_state.user_email, st.session_state.final_mbti, user_element
+    )
+
     with st.spinner("Synthesizing MBTI and Eastern Archetypes..."):
       try:
         data = generate_ai_card(st.session_state.final_mbti, user_element)
@@ -774,7 +1007,6 @@ elif st.session_state.step == 3:
                 </html>
                 """
 
-        # 调高高度至 600px 保证所有文字和卡片底部完全展示
         components.html(card_html, height=600, scrolling=False)
       except Exception as e:
         st.error(f"Failed to generate card: {str(e)}")
