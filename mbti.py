@@ -418,7 +418,7 @@ def build_stage2_questions():
 
 STAGE2_QUESTIONS = build_stage2_questions()
 # ==========================================
-# 3. Helper Functions with Model Fallback
+# 3. Helper Functions with Robust Model Fallback
 # ==========================================
 def calculate_mbti(answers, questions):
   scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
@@ -482,27 +482,30 @@ def generate_ai_card(mbti, element):
 
   client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
-  # 建立兼容性最好的备选模型列表，按顺序自动尝试
+  # Groq 长期稳定且在线的基础模型列表
   candidate_models = [
-      "llama-3.1-8b-instant",  # 最稳定、全账号通用、无权限限制
-      "mixtral-8x7b-32768",  # 高性能多专家系统
-      "gemma2-9b-it",  # 备用轻量大模型
+      "llama-3.1-8b-instant",  # 首选：快速且稳定
+      "llama3-8b-8192",  # 备用 1
+      "mixtral-8x7b-32768",  # 备用 2
   ]
 
-  last_error = None
+  errors = []
   for model_name in candidate_models:
     try:
       response = client.chat.completions.create(
           model=model_name,
           messages=[{"role": "user", "content": prompt}],
           response_format={"type": "json_object"},
+          temperature=0.7,
       )
       return json.loads(response.choices[0].message.content)
     except Exception as e:
-      last_error = e
+      errors.append(f"{model_name}: {str(e)}")
       continue
 
-  raise last_error
+  raise RuntimeError(
+      "All candidate models failed. Details:\n" + "\n".join(errors)
+  )
 
 
 # ==========================================
