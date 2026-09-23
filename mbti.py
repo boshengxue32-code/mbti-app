@@ -80,7 +80,7 @@ def generate_insights_via_ai(mbti, element):
     if not api_key:
         raise ValueError("GROQ_API_KEY not found. Please configure it in your Streamlit Secrets.")
 
-    # 使用 Groq 的免费接口
+    # 使用 Groq 的免费 OpenAI 兼容接口
     client = OpenAI(
         api_key=api_key,
         base_url="https://api.groq.com/openai/v1"
@@ -167,4 +167,3 @@ if st.button("Generate Energy Blueprint"):
 
         except Exception as e:
             st.error(f"Error generating insight: {str(e)}")
-
