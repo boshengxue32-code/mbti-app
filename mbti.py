@@ -482,11 +482,12 @@ def generate_ai_card(mbti, element):
 
   client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
-  # Groq 长期稳定且在线的基础模型列表
+  # 更新为 Groq 当前可用且最稳定的模型列表 (优先级从高到低)
   candidate_models = [
-      "llama-3.1-8b-instant",  # 首选：快速且稳定
-      "llama3-8b-8192",  # 备用 1
-      "mixtral-8x7b-32768",  # 备用 2
+      "llama-3.3-70b-versatile",  # 旗舰主力模型 (推荐)
+      "llama-3.1-8b-instant",  # 轻量高频模型
+      "qwen-2.5-32b",  # 高性能通用备用模型
+      "deepseek-r1-distill-llama-70b",  # 推理能力强力的备用模型
   ]
 
   errors = []
@@ -763,4 +764,5 @@ elif st.session_state.step == 3:
         components.html(card_html, height=460, scrolling=False)
       except Exception as e:
         st.error(f"Failed to generate card: {str(e)}")
+
 
