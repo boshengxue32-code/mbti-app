@@ -418,7 +418,7 @@ def build_stage2_questions():
 
 STAGE2_QUESTIONS = build_stage2_questions()
 # ==========================================
-# 3. Helper Functions
+# 3. Helper Functions with Model Fallback
 # ==========================================
 def calculate_mbti(answers, questions):
   scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
@@ -482,13 +482,27 @@ def generate_ai_card(mbti, element):
 
   client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
-  # 已更新为 Groq 官方支持的最新旗舰模型：llama-3.3-70b-versatile
-  response = client.chat.completions.create(
-      model="llama-3.3-70b-versatile",
-      messages=[{"role": "user", "content": prompt}],
-      response_format={"type": "json_object"},
-  )
-  return json.loads(response.choices[0].message.content)
+  # 建立兼容性最好的备选模型列表，按顺序自动尝试
+  candidate_models = [
+      "llama-3.1-8b-instant",  # 最稳定、全账号通用、无权限限制
+      "mixtral-8x7b-32768",  # 高性能多专家系统
+      "gemma2-9b-it",  # 备用轻量大模型
+  ]
+
+  last_error = None
+  for model_name in candidate_models:
+    try:
+      response = client.chat.completions.create(
+          model=model_name,
+          messages=[{"role": "user", "content": prompt}],
+          response_format={"type": "json_object"},
+      )
+      return json.loads(response.choices[0].message.content)
+    except Exception as e:
+      last_error = e
+      continue
+
+  raise last_error
 
 
 # ==========================================
