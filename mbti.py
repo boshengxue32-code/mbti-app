@@ -5,7 +5,7 @@ import streamlit as st
 import streamlit.components.v1 as components
 
 # ==========================================
-# 1. Page Configuration & Styling
+# 1. Page Configuration & Adaptive Styling
 # ==========================================
 st.set_page_config(
     page_title="Cosmic MBTI Sync & Alignment",
@@ -16,19 +16,31 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    /* 强制所有单选框及选项文字为高亮纯白色、加粗，确保黑夜模式极度清晰 */
-    .stRadio label p, 
-    .stRadio div, 
-    div[role="radiogroup"] label p, 
-    div[role="radiogroup"] span {
-        color: #FFFFFF !important;
-        font-weight: 700 !important;
-        font-size: 16px !important;
+    /* 1. 默认/浅色模式：文字自动设为深黑色 */
+    .stRadio p, .stRadio div, div[role="radiogroup"] label p, div[role="radiogroup"] span {
+        color: #1f2937 !important;
+        font-weight: 600 !important;
+        font-size: 15px !important;
         opacity: 1 !important;
     }
+
+    /* 2. 深色/暗黑模式：文字自动变更成纯白色 */
+    @media (prefers-color-scheme: dark) {
+        .stRadio p, .stRadio div, div[role="radiogroup"] label p, div[role="radiogroup"] span {
+            color: #FFFFFF !important;
+        }
+    }
+
+    /* 3. 针对 Streamlit 自带主题属性的强兼容处理 */
+    [data-theme="dark"] .stRadio p, 
+    [data-theme="dark"] div[role="radiogroup"] label p {
+        color: #FFFFFF !important;
+    }
+
+    /* 渐变按钮样式 */
     .stButton>button {
         background: linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%);
-        color: #FFFFFF;
+        color: #FFFFFF !important;
         border: none;
         border-radius: 12px;
         padding: 12px 24px;
