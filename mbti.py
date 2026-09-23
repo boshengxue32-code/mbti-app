@@ -778,5 +778,39 @@ elif st.session_state.step == 3:
         components.html(card_html, height=600, scrolling=False)
       except Exception as e:
         st.error(f"Failed to generate card: {str(e)}")
+# ==========================================
+# 5. Email Newsletter Signup Section
+# ==========================================
+st.markdown("---")
+st.markdown("### 📬 Daily Cosmic Alignment")
+st.write(
+    "Want your personalized MBTI x Elemental vibe delivered to your inbox every"
+    " morning at 7:00 AM?"
+)
+
+with st.form("email_signup_form"):
+  user_email = st.text_input(
+      "Enter your email:", placeholder="yourname@example.com"
+  )
+  submit_email = st.form_submit_button("Subscribe for Tomorrow's Vibe ✨")
+
+  if submit_email:
+    if "@" in user_email and "." in user_email:
+      # 1. 保存用户的 MBTI、五行元素和邮箱数据
+      user_data = {
+          "email": user_email,
+          "mbti": st.session_state.final_mbti,
+          "element": user_element,
+      }
+
+      # TODO: 将 user_data 发送到 Supabase / Airtable 或写入数据库
+      # 示例：save_to_database(user_data)
+
+      st.success(
+          "🎉 You're on the list! Check your inbox tomorrow at 7:00 AM for your"
+          " daily alignment."
+      )
+    else:
+      st.error("Please enter a valid email address.")
 
 
