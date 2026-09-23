@@ -418,7 +418,7 @@ def build_stage2_questions():
 
 STAGE2_QUESTIONS = build_stage2_questions()
 # ==========================================
-# 3. Helper Functions with Robust Model Fallback
+# 3. Helper Functions with Dynamic Model & Archetype Explanations
 # ==========================================
 def calculate_mbti(answers, questions):
   scores = {"E": 0, "I": 0, "S": 0, "N": 0, "T": 0, "F": 0, "J": 0, "P": 0}
@@ -458,19 +458,31 @@ def get_eastern_element(year):
 
 
 def generate_ai_card(mbti, element):
+  # 西方视角下的五行原型释义映射表，帮助老外理解概念
+  element_explanations = {
+      "Metal": "Precision, Clarity & Inner Boundaries",
+      "Water": "Flow, Depth & Intuitive Wisdom",
+      "Wood": "Growth, Expansion & Creative Vision",
+      "Fire": "Passion, Charisma & Expressive Energy",
+      "Earth": "Grounding, Stability & Nurturing Strength",
+  }
+
+  clean_element = element.split()[0] if " " in element else element
+  meaning_tag = element_explanations.get(clean_element, "Cosmic Energy")
+
   prompt = f"""
     You are a modern intuitive counselor combining Western MBTI psychology with Eastern Five-Element Archetypes.
     User's Profile:
     - Confirmed MBTI: {mbti}
-    - Eastern Element: {element}
+    - Eastern Element: {element} (Core Psychological Vibe: {meaning_tag})
 
     Generate a highly aesthetic, empowering "Energy Blueprint" report.
-    Avoid traditional fortune-telling terms. Use modern spiritual/psychological terms like "Cosmic Weather", "Inner Alignment", "Vibe Check".
+    IMPORTANT: Western users may not know Eastern Five-Element philosophy. Briefly explain what {clean_element} energy represents in modern psychological/spiritual terms (e.g., Metal = clarity, precision, sharp focus, setting strong boundaries).
 
     MUST respond ONLY with valid JSON in this exact structure:
     {{
-        "archetype_title": "Short cool title (e.g. The Intuitive Water Architect)",
-        "daily_vibe": "A concise 2-sentence psychological insight about how their {mbti} interacts with {element}.",
+        "archetype_title": "Short cool title (e.g. The Precision Idealist)",
+        "daily_vibe": "A concise 2-sentence insight explaining how {clean_element} energy ({meaning_tag}) interacts with their {mbti} cognitive style.",
         "actionable_dos": "1 specific empowering advice for today.",
         "actionable_donts": "1 thing to avoid today.",
         "power_quote": "A 1-line catchy quote for Instagram story."
@@ -482,16 +494,19 @@ def generate_ai_card(mbti, element):
 
   client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
 
-  # 修正：采用 Groq 当前官方正式支持的标准模型 ID
-  candidate_models = [
-      "openai/gpt-oss-120b",  # 主力通用大模型
-      "openai/gpt-oss-20b",  # 高速备用模型
-      "qwen/qwen3.8-27b",  # Qwen 备用路线
-      "llama-3.3-70b-versatile",  # 备用 Llama 路线
-  ]
+  # 1. 动态获取你账号实际可用的 Groq 模型列表
+  try:
+    available_models_resp = client.models.list()
+    available_ids = [m.id for m in available_models_resp.data]
+  except Exception as e:
+    raise RuntimeError(f"无法获取 Groq 模型列表，请检查 API Key: {str(e)}")
 
+  if not available_ids:
+    raise RuntimeError("当前 Groq 账户下没有可用的模型。")
+
+  # 2. 依次匹配可用模型
   errors = []
-  for model_name in candidate_models:
+  for model_name in available_ids:
     try:
       response = client.chat.completions.create(
           model=model_name,
@@ -504,9 +519,7 @@ def generate_ai_card(mbti, element):
       errors.append(f"{model_name}: {str(e)}")
       continue
 
-  raise RuntimeError(
-      "All candidate models failed. Details:\n" + "\n".join(errors)
-  )
+  raise RuntimeError("所有可用模型请求失败:\n" + "\n".join(errors))
 
 
 # ==========================================
@@ -645,7 +658,7 @@ elif st.session_state.step == 3:
                     * {{ box-sizing: border-box; }}
                     body {{
                         margin: 0;
-                        padding: 8px;
+                        padding: 4px;
                         background: transparent;
                         font-family: 'Plus Jakarta Sans', sans-serif;
                     }}
@@ -653,7 +666,7 @@ elif st.session_state.step == 3:
                         background: linear-gradient(135deg, #13151f 0%, #1e1b4b 50%, #311042 100%);
                         border: 1px solid rgba(255, 255, 255, 0.15);
                         border-radius: 20px;
-                        padding: 24px;
+                        padding: 20px;
                         box-shadow: 0 10px 30px rgba(0,0,0,0.5);
                         color: #FFFFFF;
                     }}
@@ -661,7 +674,7 @@ elif st.session_state.step == 3:
                         display: flex;
                         justify-content: space-between;
                         align-items: center;
-                        margin-bottom: 16px;
+                        margin-bottom: 12px;
                     }}
                     .tag {{
                         font-size: 11px;
@@ -680,33 +693,33 @@ elif st.session_state.step == 3:
                         color: #e2e8f0;
                     }}
                     .title {{
-                        font-size: 22px;
+                        font-size: 20px;
                         font-weight: 800;
                         background: linear-gradient(90deg, #ffffff, #c084fc);
                         -webkit-background-clip: text;
                         -webkit-text-fill-color: transparent;
-                        margin: 0 0 14px 0;
+                        margin: 0 0 12px 0;
                     }}
                     .vibe {{
-                        font-size: 14px;
+                        font-size: 13px;
                         line-height: 1.5;
                         color: #cbd5e1;
                         background: rgba(0, 0, 0, 0.25);
-                        padding: 14px;
+                        padding: 12px;
                         border-radius: 10px;
                         border-left: 3px solid #a855f7;
-                        margin-bottom: 16px;
+                        margin-bottom: 12px;
                     }}
                     .grid {{
                         display: grid;
                         grid-template-columns: 1fr 1fr;
-                        gap: 12px;
-                        margin-bottom: 16px;
+                        gap: 10px;
+                        margin-bottom: 12px;
                     }}
                     .box {{
-                        padding: 12px;
+                        padding: 10px 12px;
                         border-radius: 10px;
-                        font-size: 13px;
+                        font-size: 12px;
                         line-height: 1.4;
                     }}
                     .do-box {{
@@ -727,12 +740,12 @@ elif st.session_state.step == 3:
                     .box-text {{ color: #f1f5f9; }}
                     .quote {{
                         text-align: center;
-                        font-size: 14px;
+                        font-size: 13px;
                         font-style: italic;
                         font-weight: 600;
                         color: #f472b6;
                         border-top: 1px dashed rgba(255,255,255,0.15);
-                        padding-top: 14px;
+                        padding-top: 12px;
                         margin: 0;
                     }}
                 </style>
@@ -761,7 +774,8 @@ elif st.session_state.step == 3:
                 </html>
                 """
 
-        components.html(card_html, height=460, scrolling=False)
+        # 调高高度至 600px 保证所有文字和卡片底部完全展示
+        components.html(card_html, height=600, scrolling=False)
       except Exception as e:
         st.error(f"Failed to generate card: {str(e)}")
 
